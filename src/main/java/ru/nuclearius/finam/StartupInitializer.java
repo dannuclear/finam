@@ -39,12 +39,12 @@ public class StartupInitializer {
 
         subscriber.start();
 
-        QuoteSubscriber quoteSubscriber = new QuoteSubscriber(marketDataService, protoMapper, quoteStreamer,
-                quoteStreamer);
-        quoteStreamer.setAssetsChangeListener(quoteSubscriber);
-        subscriptionManager.register("broadcastQuote", subscriber);
+        // QuoteSubscriber quoteSubscriber = new QuoteSubscriber(marketDataService, protoMapper, quoteStreamer,
+        //         quoteStreamer);
+        // quoteStreamer.setAssetsChangeListener(quoteSubscriber);
+        // subscriptionManager.register("broadcastQuote", subscriber);
 
-        quoteSubscriber.start();
+        // quoteSubscriber.start();
     }
 
 }
