@@ -42,7 +42,7 @@ public class SecurityConfig {
                 // .requestMatchers(PathRequest.toH2Console()).permitAll()
                 .requestMatchers("/", "/index.html", "/login", "/assets/**", "/favicon.*").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs*/**").permitAll()
-                .anyRequest().authenticated())
+                .anyRequest().permitAll())
                 // .csrf(cts -> cts.ignoringRequestMatchers(PathRequest.toH2Console()))
                 .csrf(cts -> cts.disable())
                 .headers(cts -> cts.frameOptions(focts -> focts.disable()))
