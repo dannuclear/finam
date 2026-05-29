@@ -1,0 +1,210 @@
+databaseChangeLog:
+  - changeSet:
+      id: init
+      author: Denis
+      changes:
+        - createTable:
+            tableName: asset
+            columns:
+              - column:
+                  name: id
+                  type: varchar(64)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: symbol
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: ticker
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: mic
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: isin
+                  type: varchar(32)
+
+              - column:
+                  name: type
+                  type: varchar(64)
+
+              - column:
+                  name: name
+                  type: varchar(255)
+
+        - addUniqueConstraint:
+            tableName: asset
+            columnNames: symbol
+            constraintName: uk_asset_symbol
+
+        - createIndex:
+            tableName: asset
+            indexName: idx_asset_ticker
+            columns:
+              - column:
+                  name: ticker
+
+        - createIndex:
+            tableName: asset
+            indexName: idx_asset_isin
+            columns:
+              - column:
+                  name: isin
+
+        - createTable:
+            tableName: trade_group
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(1024)
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: false
+                constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: trade_group_traded_asset
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: line_color
+                  type: varchar(10)
+                  defaultValue: '#00FFA0' 
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_width
+                  type: smallint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: trade_group_id
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: asset_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: trade_group_traded_asset
+            baseColumnNames: trade_group_id
+            referencedTableName: trade_group
+            referencedColumnNames: id
+            constraintName: fk_trade_group_traded_asset_trade_group_id
+
+        - addForeignKeyConstraint:
+            baseTableName: trade_group_traded_asset
+            baseColumnNames: asset_id
+            referencedTableName: asset
+            referencedColumnNames: id
+            constraintName: fk_trade_group_traded_asset_asset_id
+
+        - addUniqueConstraint:
+            tableName: trade_group_traded_asset
+            columnNames: trade_group_id, asset_id
+            constraintName: uk_trade_group_traded_asset
+
+        - createTable:
+            tableName: trade_group_reference_asset
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: trade_group_id
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_offset
+                  type: numeric(5,3)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_color
+                  type: varchar(10)
+                  defaultValue: '#00FFA0' 
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_width
+                  type: smallint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: asset_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: trade_group_reference_asset
+            baseColumnNames: trade_group_id
+            referencedTableName: trade_group
+            referencedColumnNames: id
+            constraintName: fk_trade_group_reference_asset_trade_group_id
+
+        - addForeignKeyConstraint:
+            baseTableName: trade_group_reference_asset
+            baseColumnNames: asset_id
+            referencedTableName: asset
+            referencedColumnNames: id
+            constraintName: fk_trade_group_reference_asset_asset_id
+
+        - addUniqueConstraint:
+            tableName: trade_group_reference_asset
+            columnNames: trade_group_id, asset_id
+            constraintName: uk_trade_group_reference_asset

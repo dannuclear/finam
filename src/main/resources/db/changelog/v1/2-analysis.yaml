@@ -1,0 +1,77 @@
+databaseChangeLog:
+  - changeSet:
+      id: analysis
+      author: Denis
+      changes:
+        - createTable:
+            tableName: analysis
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: analysis_asset
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: analysis_id
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: asset_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_color
+                  type: varchar(10)
+                  defaultValue: "#00FFA0"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_width
+                  type: smallint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: analysis_asset
+            baseColumnNames: analysis_id
+            referencedTableName: analysis
+            referencedColumnNames: id
+            constraintName: fk_analysis_asset_analysis_id
+
+        - addForeignKeyConstraint:
+            baseTableName: analysis_asset
+            baseColumnNames: asset_id
+            referencedTableName: asset
+            referencedColumnNames: id
+            constraintName: fk_analysis_asset_asset_id
+
+        - addUniqueConstraint:
+            tableName: analysis_asset
+            columnNames: analysis_id, asset_id
+            constraintName: uk_analysis_asset

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: analysis-panel
+      author: Denis
+      changes:
+        - addColumn:
+            tableName: analysis_asset
+            columns:
+              - column:
+                  name: panel_index
+                  type: integer
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false

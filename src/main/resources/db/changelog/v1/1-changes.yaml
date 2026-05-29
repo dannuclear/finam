@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: panels
+      author: Denis
+      changes:
+        - addColumn:
+            tableName: trade_group_reference_asset
+            columns:
+              - column:
+                  name: panel_num
+                  type: integer
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
