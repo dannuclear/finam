@@ -33,7 +33,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "target/*.jar,*.db,*.xml"
+          source: "target/*.jar,testdb.mv.db,testdb.trace.db"
           target: /home/denis/finam
           strip_components: 1
           rm: true
