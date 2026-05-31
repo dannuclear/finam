@@ -22,9 +22,10 @@ jobs:
       - name: Build with Maven
         run: mvn -ntp clean package -DskipTests
 
-      - name: Debug files
+      - name: Copy database files to target
         run: |
-          find . -maxdepth 2 -type f | sort
+          cp testdb.mv.db target/
+          cp testdb.trace.db target/
 
       - name: Copy jar to server
         uses: appleboy/scp-action@v0.1.7
@@ -33,11 +34,10 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "target/*.jar,testdb.mv.db,testdb.trace.db"
+          source: "target/*.jar,target/*.db"
           target: /home/denis/finam
           strip_components: 1
           rm: true
-          debug: true
 
       - name: Restart service
         uses: appleboy/ssh-action@v1.0.3
