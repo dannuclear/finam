@@ -37,6 +37,7 @@ jobs:
           target: /home/denis/finam
           strip_components: 1
           rm: true
+          debug: true
 
       - name: Restart service
         uses: appleboy/ssh-action@v1.0.3
