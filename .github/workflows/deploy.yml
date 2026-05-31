@@ -20,11 +20,11 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven
-        run: mvn clean package -DskipTests
+        run: mvn -ntp clean package -DskipTests
 
       - name: Debug files
         run: |
-          find . -type f | sort
+          find . -maxdepth 2 -type f | sort
 
       - name: Copy jar to server
         uses: appleboy/scp-action@v0.1.7
