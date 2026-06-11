@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -82,14 +83,20 @@ public class AnalysisController {
 
         var futures = analysisService.assets(id).stream().map(aAsset -> finamService
                 .barsAsync(aAsset.getAsset().getSymbol(), averageTimeFrame, averageStartTime, averageEndTime)
-                .thenApply(bars -> bars.stream().map(Bar::getClose)
-                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue)))
-                .thenApply(avg -> restMapper.toDto(
+                .thenApply(bars -> {
+                    DescriptiveStatistics ds = new DescriptiveStatistics();
+                    bars.stream()
+                            .map(Bar::getClose)
+                            .map(BigDecimal::doubleValue)
+                            .forEach(ds::addValue);
+                    return ds;
+                })
+                .thenApply(ds -> restMapper.toDto(
                         aAsset,
                         finamService.bars(aAsset.getAsset().getSymbol(), timeFrame, startTime, endTime)
                                 .stream()
-                                .map(bar -> bar.withDivide(avg).withPriceOffset(-1).withMultiply(100))
-                                //.map(bar -> bar.withPriceOffset(-avg))
+                                .map(bar -> bar.withDivide(ds.getMean()).withPriceOffset(-1).withMultiply(100))
+                                // .map(bar -> bar.withPriceOffset(-avg))
                                 .toList())))
                 .toList();
 
