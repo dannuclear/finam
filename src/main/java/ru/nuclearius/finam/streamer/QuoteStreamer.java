@@ -6,10 +6,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.nuclearius.finam.client.dto.Quote;
 import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriber.QuoteListener;
 import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriber.SymbolsProvider;
 
+@Slf4j
 @Component
 @Scope("singleton")
 public class QuoteStreamer extends HeartbeatSseEmitterRegistry implements QuoteListener, SymbolsProvider {
@@ -23,6 +25,7 @@ public class QuoteStreamer extends HeartbeatSseEmitterRegistry implements QuoteL
 
         for (SseEmitter emitter : emitters) {
             try {
+                // log.debug("symbol: {} quote: {}", quote.getSymbol(), quote.getClose());
                 emitter.send(SseEmitter.event().name("quote").data(quote).build());
             } catch (Exception ex) {
                 remove(symbol, emitter);

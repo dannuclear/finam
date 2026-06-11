@@ -37,14 +37,13 @@ public class StartupInitializer {
 
         subscriptionManager.register("jwtRenewal", subscriber);
 
-       subscriber.start();
+        subscriber.start();
 
-        // QuoteSubscriber quoteSubscriber = new QuoteSubscriber(marketDataService, protoMapper, quoteStreamer,
-        //         quoteStreamer);
-        // quoteStreamer.setAssetsChangeListener(quoteSubscriber);
-        // subscriptionManager.register("broadcastQuote", subscriber);
+        QuoteSubscriber quoteSubscriber = new QuoteSubscriber(marketDataService, protoMapper, quoteStreamer, quoteStreamer);
+        quoteStreamer.setAssetsChangeListener(quoteSubscriber);
+        subscriptionManager.register("broadcastQuote", quoteSubscriber);
 
-        // quoteSubscriber.start();
+        quoteSubscriber.start();
     }
 
 }

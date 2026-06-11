@@ -5,6 +5,7 @@ import java.util.Set;
 import grpc.tradeapi.v1.marketdata.MarketDataServiceGrpc;
 import grpc.tradeapi.v1.marketdata.SubscribeQuoteRequest;
 import grpc.tradeapi.v1.marketdata.SubscribeQuoteResponse;
+import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.nuclearius.finam.client.dto.Quote;
@@ -25,10 +26,10 @@ public class QuoteSubscriber extends AbstractBackoffObserver<SubscribeQuoteReque
     @Override
     protected void subscribe() {
         Set<String> symbols = symbolSource.getSymbols();
-        // if (symbols == null || symbols.size() == 0) {
-        // log.info("Symbols empty");
-        // return;
-        // }
+        if (symbols == null || symbols.size() == 0) {
+            log.info("Symbols empty");
+            return;
+        }
 
         log.info("Subscribing to {} symbols: {}", symbols.size(), symbols);
 
@@ -45,7 +46,11 @@ public class QuoteSubscriber extends AbstractBackoffObserver<SubscribeQuoteReque
 
     @Override
     public void onChange(Set<String> newSet) {
+        StreamObserver<?> observer = getRequestStream();
         cancel("change assets");
+        if (observer == null) {
+            subscribe();
+        }
     }
 
     public interface QuoteListener {
