@@ -95,8 +95,8 @@ public class AnalysisController {
                         aAsset,
                         finamService.bars(aAsset.getAsset().getSymbol(), timeFrame, startTime, endTime)
                                 .stream()
-                                .map(bar -> bar.withDivide(ds.getMean()).withPriceOffset(-1).withMultiply(100))
-                                // .map(bar -> bar.withPriceOffset(-avg))
+                                //.map(bar -> bar.withDivide(ds.getMean()).withPriceOffset(-1).withMultiply(100))
+                                .map(bar -> bar.withPriceOffset(-ds.getMean()).withDivide(ds.getStandardDeviation()))
                                 .toList())))
                 .toList();
 
