@@ -64,7 +64,7 @@ const TradeGroupQuotesDialog = ({
 
         const lastPrices = (data ?? [])
             .filter(item => enabledBars[item.id as string] ?? item.enabled ?? true)
-            .map(item => (item?.bars?.at(-1)?.close ?? 0) + (item.priceOffset ?? 0.0))
+            .map(item => (item?.bars?.at(-1)?.close ?? 0))
             .filter((v): v is number => v !== undefined && v !== null);
 
         const avgOffset =
@@ -89,7 +89,7 @@ const TradeGroupQuotesDialog = ({
                     )
                     .map<LineData>((bar) => ({
                         time: bar.mills as UTCTimestamp,
-                        value: bar.close as number + (item.priceOffset ?? 0.0) - avgOffset,
+                        value: bar.close as number - avgOffset,
                         customValues: {
                             realPrice: bar.close as number
                         }
