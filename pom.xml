@@ -36,6 +36,29 @@
 		<protobuf-java.version>4.33.4</protobuf-java.version>
 		<spring-grpc.version>1.0.2</spring-grpc.version>
 	</properties>
+
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<properties>
+				<springProfiles>dev</springProfiles>
+				<rootAppender>STDOUT</rootAppender>
+				<h2-scope>runtime</h2-scope>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>prod</id>
+			<properties>
+				<springProfiles>prod</springProfiles>
+				<rootAppender>RollingFile</rootAppender>
+				<h2-scope>runtime</h2-scope>
+			</properties>
+		</profile>
+	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -104,7 +127,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+			<scope>${h2-scope}</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -268,7 +291,7 @@
 					<nodeVersion>v22.14.0</nodeVersion>
 					<workingDirectory>${frontend-maven-plugin.workingDirectory}</workingDirectory>
 				</configuration>
-			</plugin> 
+			</plugin>
 
 			<!-- <plugin>
 				<groupId>org.openapitools</groupId>

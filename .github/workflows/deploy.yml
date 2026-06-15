@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven
-        run: mvn -ntp clean package -DskipTests
+        run: mvn -ntp clean package -DskipTests -Pprod
 
       - name: Copy database files to target
         run: |
