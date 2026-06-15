@@ -9,7 +9,8 @@ export const useAnalysisRelativeSpreads = ({
     endTime,
     averageTimeFrame,
     averageStartTime,
-    averageEndTime
+    averageEndTime,
+    zEstimate
 }: {
     analysisId?: number,
     timeFrame: TimeFrame,
@@ -18,6 +19,7 @@ export const useAnalysisRelativeSpreads = ({
     averageTimeFrame: TimeFrame,
     averageStartTime: Dayjs,
     averageEndTime: Dayjs,
+    zEstimate: boolean
 }) => {
     return rqClient.useQuery("get", "/api/v1/analysis/{id}/relative-spreads", {
         params: {
@@ -30,7 +32,8 @@ export const useAnalysisRelativeSpreads = ({
                 endTime: endTime.format(),
                 averageTimeFrame,
                 averageStartTime: averageStartTime.format(),
-                averageEndTime: averageEndTime.format()
+                averageEndTime: averageEndTime.format(),
+                zEstimate: zEstimate
             }
         }
     }, {

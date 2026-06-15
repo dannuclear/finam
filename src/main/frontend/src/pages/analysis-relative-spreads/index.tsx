@@ -1,5 +1,5 @@
 import { useAnalysisRelativeSpreads } from "@entities/analysis";
-import { Grid } from "@mui/material";
+import { FormControlLabel, Grid, Switch } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import type { Analysis } from "@shared/api/schema";
@@ -19,9 +19,10 @@ const Index = () => {
     const [startTime, setStartTime] = useState<Dayjs>(dayjs().subtract(timeFrame.maxDays, "day"))
     const [endTime, setEndTime] = useState<Dayjs>(dayjs())
     // const [averageTimeFrame, setAverageTimeFrame] = useState<TimeFrameConfig>(TIMEFRAMES[8]);
-    const [averageStartTime, setAverageStartTime] = useState<Dayjs>(dayjs().subtract(TIMEFRAMES[8].maxDays/2-40, "day"))
+    const [averageStartTime, setAverageStartTime] = useState<Dayjs>(dayjs().subtract(TIMEFRAMES[8].maxDays / 2 - 40, "day"))
     const [averageEndTime, setAverageEndTime] = useState<Dayjs>(dayjs())
     const [enabledBars, setEnabledBars] = useState<Record<string, boolean>>({})
+    const [zEstimate, setZEstimate] = useState<boolean>(false)
 
     const [analysis, setAnalysis] = useState<Analysis | null>(null)
 
@@ -32,7 +33,8 @@ const Index = () => {
         endTime: endTime,
         averageTimeFrame: TIMEFRAMES[8].value,
         averageStartTime: averageStartTime,
-        averageEndTime: averageEndTime
+        averageEndTime: averageEndTime,
+        zEstimate: zEstimate
     })
 
     const toggleEnabled = (item: LegendItem) => {
@@ -102,6 +104,14 @@ const Index = () => {
             </Grid>
             <Grid size={{ xs: 6, lg: 2 }}>
                 <DatePicker label="Средняя дневная по" value={averageEndTime} onChange={val => val && setAverageEndTime(val)} />
+            </Grid>
+            <Grid size={{ xs: 6, lg: 2 }}>
+                <FormControlLabel
+                    label="Z - оценка"
+                    control={<Switch
+                        value={zEstimate}
+                        onChange={(_, val) => setZEstimate(val)} />} />
+
             </Grid>
 
             <Grid size={12} >

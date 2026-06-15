@@ -325,16 +325,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/analysis/relative-spreads": {
+    "/auth": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["relativeSpreads_1"];
+        get?: never;
         put?: never;
-        post?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        username?: string;
+                        password?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -476,7 +507,7 @@ export interface components {
             /** Format: int32 */
             panelNum?: number;
         };
-        PriceOffsetSeries: {
+        Series: {
             id?: string;
             lineColor?: string;
             /** Format: int32 */
@@ -486,7 +517,9 @@ export interface components {
             /** Format: int32 */
             panelNum?: number;
             bars?: components["schemas"]["Bar"][];
-            priceOffset?: number;
+            extraParams?: {
+                [key: string]: unknown;
+            };
         };
         MDPermission: {
             /** @enum {string} */
@@ -597,17 +630,6 @@ export interface components {
         PagedModelAnalysis: {
             content?: components["schemas"]["Analysis"][];
             page?: components["schemas"]["PageMetadata"];
-        };
-        Series: {
-            id?: string;
-            lineColor?: string;
-            /** Format: int32 */
-            lineWidth?: number;
-            name?: string;
-            enabled?: boolean;
-            /** Format: int32 */
-            panelNum?: number;
-            bars?: components["schemas"]["Bar"][];
         };
         AnalysisAsset: {
             /** Format: int32 */
@@ -962,7 +984,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PriceOffsetSeries"][];
+                    "*/*": components["schemas"]["Series"][];
                 };
             };
         };
@@ -1173,6 +1195,7 @@ export interface operations {
                 averageTimeFrame: "TIME_FRAME_UNSPECIFIED" | "TIME_FRAME_M1" | "TIME_FRAME_M5" | "TIME_FRAME_M15" | "TIME_FRAME_M30" | "TIME_FRAME_H1" | "TIME_FRAME_H2" | "TIME_FRAME_H4" | "TIME_FRAME_H8" | "TIME_FRAME_D" | "TIME_FRAME_W" | "TIME_FRAME_MN" | "TIME_FRAME_QR" | "UNRECOGNIZED";
                 averageStartTime: string;
                 averageEndTime: string;
+                zEstimate?: boolean;
             };
             header?: never;
             path: {
@@ -1211,34 +1234,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AnalysisAsset"][];
-                };
-            };
-        };
-    };
-    relativeSpreads_1: {
-        parameters: {
-            query: {
-                symbols: string[];
-                timeFrame: "TIME_FRAME_UNSPECIFIED" | "TIME_FRAME_M1" | "TIME_FRAME_M5" | "TIME_FRAME_M15" | "TIME_FRAME_M30" | "TIME_FRAME_H1" | "TIME_FRAME_H2" | "TIME_FRAME_H4" | "TIME_FRAME_H8" | "TIME_FRAME_D" | "TIME_FRAME_W" | "TIME_FRAME_MN" | "TIME_FRAME_QR" | "UNRECOGNIZED";
-                startTime: string;
-                endTime: string;
-                averageTimeFrame: "TIME_FRAME_UNSPECIFIED" | "TIME_FRAME_M1" | "TIME_FRAME_M5" | "TIME_FRAME_M15" | "TIME_FRAME_M30" | "TIME_FRAME_H1" | "TIME_FRAME_H2" | "TIME_FRAME_H4" | "TIME_FRAME_H8" | "TIME_FRAME_D" | "TIME_FRAME_W" | "TIME_FRAME_MN" | "TIME_FRAME_QR" | "UNRECOGNIZED";
-                averageStartTime: string;
-                averageEndTime: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Series"][];
                 };
             };
         };

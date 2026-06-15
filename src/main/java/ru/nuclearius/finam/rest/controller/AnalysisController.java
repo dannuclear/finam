@@ -79,24 +79,27 @@ public class AnalysisController {
             @RequestParam Instant endTime,
             @RequestParam TimeFrame averageTimeFrame,
             @RequestParam Instant averageStartTime,
-            @RequestParam Instant averageEndTime) {
+            @RequestParam Instant averageEndTime,
+            @RequestParam(defaultValue = "false") Boolean zEstimate) {
 
         var futures = analysisService.assets(id).stream().map(aAsset -> finamService
-                .barsAsync(aAsset.getAsset().getSymbol(), averageTimeFrame, averageStartTime, averageEndTime)
-                .thenApply(bars -> {
-                    DescriptiveStatistics ds = new DescriptiveStatistics();
-                    bars.stream()
-                            .map(Bar::getClose)
-                            .map(BigDecimal::doubleValue)
-                            .forEach(ds::addValue);
-                    return ds;
-                })
-                .thenApply(ds -> restMapper.toDto(
+                .barsWithDescriptiveStatisticsAsync(aAsset.getAsset().getSymbol(), averageTimeFrame, averageStartTime,
+                        averageEndTime)
+                .thenApply(bds -> restMapper.toDto(
                         aAsset,
                         finamService.bars(aAsset.getAsset().getSymbol(), timeFrame, startTime, endTime)
                                 .stream()
-                                //.map(bar -> bar.withDivide(ds.getMean()).withPriceOffset(-1).withMultiply(100))
-                                .map(bar -> bar.withPriceOffset(-ds.getMean()).withDivide(ds.getStandardDeviation()))
+                                .map(bar -> {
+                                    if (zEstimate)
+                                        return bar
+                                                .withPriceOffset(-bds.ds().getMean())
+                                                .withDivide(bds.ds().getStandardDeviation());
+                                    else
+                                        return bar
+                                                .withDivide(bds.ds().getMean())
+                                                .withPriceOffset(-1)
+                                                .withMultiply(100);
+                                })
                                 .toList())))
                 .toList();
 
