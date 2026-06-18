@@ -37,6 +37,7 @@ import ru.nuclearius.finam.repository.TradeGroupReferenceAssetRepository;
 import ru.nuclearius.finam.rest.dto.Series;
 import ru.nuclearius.finam.rest.dto.TradeGroupDTO;
 import ru.nuclearius.finam.rest.mapper.RESTMapper;
+import ru.nuclearius.finam.service.BarService;
 import ru.nuclearius.finam.service.FinamService;
 import ru.nuclearius.finam.service.TradeGroupService;
 import ru.nuclearius.finam.service.mapper.EntityMapper;
@@ -51,7 +52,7 @@ public class TradeGroupController {
     private final EntityMapper entityMapper;
     private final SubscriptionManager subscriptionManager;
     private final QuoteSubscriberFactory quoteSubscriberFactory;
-    private final FinamService finamService;
+    private final BarService barService;
     private final RESTMapper restMapper;
 
     private final TradeGroupReferenceAssetRepository tradeGroupReferenceAssetRepository;
@@ -124,7 +125,7 @@ public class TradeGroupController {
             @RequestParam OffsetDateTime endTime) {
         var results = tradeGroupService.referenceAssetsByGroupId(id).stream()
                 .filter(asset -> asset.getEnabled())
-                .map(asset -> finamService.barsAsync(
+                .map(asset -> barService.barsAsync(
                         asset.getAsset().getSymbol(),
                         timeFrame,
                         startTime.toInstant(),
@@ -163,7 +164,7 @@ public class TradeGroupController {
                 .stream()
                 .map(tGAsset -> {
                     var symbol = tGAsset.getAsset().getSymbol();
-                    return finamService.barsAsync(
+                    return barService.barsAsync(
                             symbol,
                             timeFrame,
                             startTime.toInstant(),

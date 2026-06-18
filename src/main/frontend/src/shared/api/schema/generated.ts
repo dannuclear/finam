@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/analysis/{id}": {
+    "/api/v1/strategies/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -31,6 +31,22 @@ export interface paths {
         put: operations["update_1"];
         post?: never;
         delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analysis/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["byId_1"];
+        put: operations["update_2"];
+        post?: never;
+        delete: operations["delete_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -84,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/analysis": {
+    "/api/v1/strategies": {
         parameters: {
             query?: never;
             header?: never;
@@ -100,6 +116,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategies/{id}/backtest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["backtest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["all_2"];
+        put?: never;
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trade-groups/{id}": {
         parameters: {
             query?: never;
@@ -107,7 +155,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["byId_1"];
+        get: operations["byId_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -164,6 +212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategies/{id}/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/finam/token-details": {
         parameters: {
             query?: never;
@@ -187,7 +251,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["assets"];
+        get: operations["assets_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -316,7 +380,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["assets_1"];
+        get: operations["assets_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -448,6 +512,25 @@ export interface components {
             lineWidth?: number;
             enabled?: boolean;
         };
+        StrategyAssetDto: {
+            /** @enum {string} */
+            changeStatus?: "NEW" | "UPDATED" | "DELETED";
+            /** Format: int32 */
+            id?: number;
+            asset?: components["schemas"]["Asset"];
+            lineColor?: string;
+            /** Format: int32 */
+            lineWidth?: number;
+        };
+        StrategyDto: {
+            name?: string;
+            assets?: components["schemas"]["StrategyAssetDto"][];
+        };
+        Strategy: {
+            /** Format: int32 */
+            id?: number;
+            name?: string;
+        };
         AnalysisAssetDTO: {
             /** @enum {string} */
             changeStatus?: "NEW" | "UPDATED" | "DELETED";
@@ -464,11 +547,34 @@ export interface components {
         AnalysisDTO: {
             name?: string;
             assets?: components["schemas"]["AnalysisAssetDTO"][];
+            /** Format: int32 */
+            averageDays?: number;
         };
         Analysis: {
             /** Format: int32 */
             id?: number;
             name?: string;
+            /** Format: int32 */
+            averageDays?: number;
+        };
+        BacktestResult: {
+            series?: components["schemas"]["Series"][];
+            stats?: components["schemas"]["BacktestStats"];
+        };
+        BacktestStats: unknown;
+        Series: {
+            id?: string;
+            lineColor?: string;
+            /** Format: int32 */
+            lineWidth?: number;
+            name?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            panelNum?: number;
+            bars?: components["schemas"]["Bar"][];
+            extraParams?: {
+                [key: string]: unknown;
+            };
         };
         PageMetadata: {
             /** Format: int64 */
@@ -507,19 +613,18 @@ export interface components {
             /** Format: int32 */
             panelNum?: number;
         };
-        Series: {
-            id?: string;
+        PagedModelStrategy: {
+            content?: components["schemas"]["Strategy"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        StrategyAsset: {
+            /** Format: int32 */
+            id?: number;
+            strategy?: components["schemas"]["Strategy"];
+            asset?: components["schemas"]["Asset"];
             lineColor?: string;
             /** Format: int32 */
             lineWidth?: number;
-            name?: string;
-            enabled?: boolean;
-            /** Format: int32 */
-            panelNum?: number;
-            bars?: components["schemas"]["Bar"][];
-            extraParams?: {
-                [key: string]: unknown;
-            };
         };
         MDPermission: {
             /** @enum {string} */
@@ -695,12 +800,80 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["Analysis"];
+                    "*/*": components["schemas"]["Strategy"];
                 };
             };
         };
     };
     update_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrategyDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Strategy"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    byId_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Analysis"];
+                };
+            };
+        };
+    };
+    update_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -726,7 +899,7 @@ export interface operations {
             };
         };
     };
-    delete: {
+    delete_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -867,12 +1040,90 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PagedModelAnalysis"];
+                    "*/*": components["schemas"]["PagedModelStrategy"];
                 };
             };
         };
     };
     create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrategyDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Strategy"];
+                };
+            };
+        };
+    };
+    backtest: {
+        parameters: {
+            query: {
+                timeFrame: "TIME_FRAME_UNSPECIFIED" | "TIME_FRAME_M1" | "TIME_FRAME_M5" | "TIME_FRAME_M15" | "TIME_FRAME_M30" | "TIME_FRAME_H1" | "TIME_FRAME_H2" | "TIME_FRAME_H4" | "TIME_FRAME_H8" | "TIME_FRAME_D" | "TIME_FRAME_W" | "TIME_FRAME_MN" | "TIME_FRAME_QR" | "UNRECOGNIZED";
+                startTime: string;
+                endTime: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BacktestResult"];
+                };
+            };
+        };
+    };
+    all_2: {
+        parameters: {
+            query?: {
+                q?: string;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelAnalysis"];
+                };
+            };
+        };
+    };
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -896,7 +1147,7 @@ export interface operations {
             };
         };
     };
-    byId_1: {
+    byId_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -989,6 +1240,28 @@ export interface operations {
             };
         };
     };
+    assets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StrategyAsset"][];
+                };
+            };
+        };
+    };
     tokenDetails: {
         parameters: {
             query?: never;
@@ -1009,7 +1282,7 @@ export interface operations {
             };
         };
     };
-    assets: {
+    assets_1: {
         parameters: {
             query?: {
                 q?: string;
@@ -1216,7 +1489,7 @@ export interface operations {
             };
         };
     };
-    assets_1: {
+    assets_2: {
         parameters: {
             query?: never;
             header?: never;

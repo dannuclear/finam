@@ -25,4 +25,6 @@ public class Analysis {
     private Integer id;
 
     private String name;
+
+    private Integer averageDays;
 }

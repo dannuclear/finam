@@ -33,6 +33,26 @@ const items: MainMenuItem[] = [
         roles: [],
     },
     {
+        label: 'Стратегии',
+        icon: 'fa-chess',
+        redirect: "#",
+        roles: [],
+        items: [
+            {
+                label: 'Список',
+                icon: 'fa-list-radio',
+                navigate: ROUTES.STRATEGIES,
+                roles: [],
+            },
+            {
+                label: 'Тестирование',
+                icon: 'fa-flask-gear',
+                navigate: ROUTES.BACKTEST,
+                roles: [],
+            },
+        ]
+    },
+    {
         label: 'Аналитика',
         icon: 'fa-calculator',
         redirect: "#",

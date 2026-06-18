@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: analysis
+      author: Denis
+      changes:
+        - addColumn:
+            tableName: analysis
+            columns:
+              - column:
+                  name: average_days
+                  type: integer
+                  constraints:
+                    nullable: true

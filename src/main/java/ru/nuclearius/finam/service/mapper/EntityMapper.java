@@ -8,11 +8,14 @@ import org.mapstruct.Mapping;
 import ru.nuclearius.finam.client.dto.Bar;
 import ru.nuclearius.finam.db.Analysis;
 import ru.nuclearius.finam.db.AnalysisAsset;
+import ru.nuclearius.finam.db.Strategy;
+import ru.nuclearius.finam.db.StrategyAsset;
 import ru.nuclearius.finam.db.TradeGroup;
 import ru.nuclearius.finam.db.TradeGroupReferenceAsset;
 import ru.nuclearius.finam.db.TradeGroupTradedAsset;
 import ru.nuclearius.finam.rest.dto.AnalysisAssetDTO;
 import ru.nuclearius.finam.rest.dto.Indicator;
+import ru.nuclearius.finam.rest.dto.StrategyAssetDto;
 import ru.nuclearius.finam.rest.dto.TradeGroupDTO;
 import ru.nuclearius.finam.rest.dto.TradeGroupReferenceAssetDTO;
 import ru.nuclearius.finam.rest.dto.TradeGroupTradedAssetDTO;
@@ -37,4 +40,8 @@ public interface EntityMapper {
     @Mapping(target = "id", source = "dto.id")
     @Mapping(target = "analysis", source = "analysis")
     AnalysisAsset toDomain(AnalysisAssetDTO dto, Analysis analysis);
+
+    @Mapping(target = "id", source = "dto.id")
+    @Mapping(target = "strategy", source = "strategy")
+    StrategyAsset toDomain(StrategyAssetDto dto, Strategy strategy);
 }

@@ -1,0 +1,71 @@
+databaseChangeLog:
+  - changeSet:
+      id: strategy
+      author: Denis
+      changes:
+        - createTable:
+            tableName: strategy
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: strategy_asset
+            columns:
+              - column:
+                  name: id
+                  type: integer
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: strategy_id
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: asset_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_color
+                  type: varchar(10)
+                  defaultValue: "#00FFA0"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: line_width
+                  type: smallint
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: strategy_asset
+            baseColumnNames: strategy_id
+            referencedTableName: strategy
+            referencedColumnNames: id
+            constraintName: fk_strategy_asset_strategy_id
+
+        - addForeignKeyConstraint:
+            baseTableName: strategy_asset
+            baseColumnNames: asset_id
+            referencedTableName: asset
+            referencedColumnNames: id
+            constraintName: fk_strategy_asset_asset_id
+
+        - addUniqueConstraint:
+            tableName: strategy_asset
+            columnNames: strategy_id, asset_id
+            constraintName: uk_strategy_asset

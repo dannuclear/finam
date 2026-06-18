@@ -30,6 +30,7 @@ import ru.nuclearius.finam.client.dto.TokenDetails;
 import ru.nuclearius.finam.client.dto.TradeHistory;
 import ru.nuclearius.finam.client.dto.TransactionList;
 import ru.nuclearius.finam.db.Asset;
+import ru.nuclearius.finam.service.BarService;
 import ru.nuclearius.finam.service.FinamService;
 import ru.nuclearius.finam.streamer.QuoteStreamer;
 
@@ -38,6 +39,7 @@ import ru.nuclearius.finam.streamer.QuoteStreamer;
 @RequiredArgsConstructor
 public class FinamController {
     private final FinamService finamService;
+    private final BarService barService;
     private final QuoteStreamer quoteStreamer;
 
     @GetMapping("token-details")
@@ -101,7 +103,7 @@ public class FinamController {
 
         List<CompletableFuture<Map.Entry<String, List<Bar>>>> futures = symbols.stream()
                 .map(symbol -> {
-                    return finamService.barsAsync(
+                    return barService.barsAsync(
                             symbol,
                             timeFrame,
                             startTime.toInstant(),

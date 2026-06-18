@@ -62,9 +62,8 @@ const BarChart = ({
     ...props
 }: BarChartProps) => {
     const setTimeFrameWithInterval = (tfc: TimeFrameConfig) => {
-        const now = dayjs();
+        const now = dayjs().startOf('minute');
         const start = now.subtract(tfc.maxDays, "day");
-
         onTimeFrameChange?.(tfc, start, now);
     };
 

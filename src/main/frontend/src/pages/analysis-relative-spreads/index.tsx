@@ -44,6 +44,13 @@ const Index = () => {
         }))
     }
 
+    const onAnalysisChange = (value: Analysis | null) => {
+        setAnalysis(value)
+        if (value && value.averageDays)
+            setAverageStartTime(dayjs().subtract(value.averageDays, "day"))
+    }
+
+
     const { series, legendOptions } = useMemo(() => {
         const seriesResult = [];
         const legendResult: LegendItem[] = [];
@@ -97,7 +104,7 @@ const Index = () => {
             <Grid size={{ xs: 12, lg: 8 }}>
                 <AnalysisEditableSelect
                     value={analysis}
-                    onChange={(_, value) => setAnalysis(value)} />
+                    onChange={(_, value) => onAnalysisChange(value)} />
             </Grid>
             <Grid size={{ xs: 6, lg: 2 }}>
                 <DatePicker label="Средняя дневная с" value={averageStartTime} onChange={val => val && setAverageStartTime(val)} />

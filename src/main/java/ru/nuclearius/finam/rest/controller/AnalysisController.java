@@ -1,12 +1,9 @@
 package ru.nuclearius.finam.rest.controller;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,21 +19,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import grpc.tradeapi.v1.marketdata.TimeFrame;
 import lombok.RequiredArgsConstructor;
-import ru.nuclearius.finam.client.dto.Bar;
 import ru.nuclearius.finam.db.Analysis;
 import ru.nuclearius.finam.db.AnalysisAsset;
 import ru.nuclearius.finam.rest.dto.AnalysisDTO;
 import ru.nuclearius.finam.rest.dto.Series;
 import ru.nuclearius.finam.rest.mapper.RESTMapper;
 import ru.nuclearius.finam.service.AnalysisService;
-import ru.nuclearius.finam.service.FinamService;
+import ru.nuclearius.finam.service.BarService;
 
 @RestController
 @RequestMapping("api/v1/analysis")
 @RequiredArgsConstructor
 public class AnalysisController {
     private final AnalysisService analysisService;
-    private final FinamService finamService;
+    private final BarService barService;
     private final RESTMapper restMapper;
 
     @GetMapping
@@ -58,12 +54,12 @@ public class AnalysisController {
 
     @PostMapping
     public Analysis create(@RequestBody AnalysisDTO dto) {
-        return analysisService.create(dto.getName(), dto.getAssets());
+        return analysisService.create(dto.getName(), dto.getAssets(), dto.getAverageDays());
     }
 
     @PutMapping("{id:\\d+}")
     public Analysis update(@PathVariable Integer id, @RequestBody AnalysisDTO dto) {
-        return analysisService.update(id, dto.getName(), dto.getAssets());
+        return analysisService.update(id, dto.getName(), dto.getAssets(), dto.getAverageDays());
     }
 
     @DeleteMapping("{id:\\d+}")
@@ -82,12 +78,12 @@ public class AnalysisController {
             @RequestParam Instant averageEndTime,
             @RequestParam(defaultValue = "false") Boolean zEstimate) {
 
-        var futures = analysisService.assets(id).stream().map(aAsset -> finamService
+        var futures = analysisService.assets(id).stream().map(aAsset -> barService
                 .barsWithDescriptiveStatisticsAsync(aAsset.getAsset().getSymbol(), averageTimeFrame, averageStartTime,
                         averageEndTime)
                 .thenApply(bds -> restMapper.toDto(
                         aAsset,
-                        finamService.bars(aAsset.getAsset().getSymbol(), timeFrame, startTime, endTime)
+                        barService.bars(aAsset.getAsset().getSymbol(), timeFrame, startTime, endTime)
                                 .stream()
                                 .map(bar -> {
                                     if (zEstimate)

@@ -1,4 +1,1 @@
-import { AssetTable } from "./ui/asset-table";
-
-export { AssetTable };
-
+export { AssetTable } from "./ui/asset-table";

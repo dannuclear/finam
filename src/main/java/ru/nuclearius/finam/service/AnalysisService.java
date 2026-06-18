@@ -15,7 +15,7 @@ import ru.nuclearius.finam.db.AnalysisAsset;
 import ru.nuclearius.finam.repository.AnalysisAssetRepository;
 import ru.nuclearius.finam.repository.AnalysisRepository;
 import ru.nuclearius.finam.rest.dto.AnalysisAssetDTO;
-import ru.nuclearius.finam.service.exception.AnalysisNotFoundException;
+import ru.nuclearius.finam.service.exception.StrategyNotFoundException;
 import ru.nuclearius.finam.service.mapper.EntityMapper;
 import ru.nuclearius.finam.service.meta.MetaUtils;
 
@@ -36,7 +36,7 @@ public class AnalysisService {
 	public Analysis getById(Integer id) {
 		Assert.notNull(id, "Id должно быть указано");
 		return analysisRepository.findById(id)
-				.orElseThrow(() -> new AnalysisNotFoundException(id));
+				.orElseThrow(() -> new StrategyNotFoundException(id));
 	}
 
 	public List<AnalysisAsset> assets(Integer analysisId) {
@@ -47,13 +47,15 @@ public class AnalysisService {
 	@Transactional
 	public Analysis create(
 			String name,
-			List<AnalysisAssetDTO> assets) {
+			List<AnalysisAssetDTO> assets,
+			Integer averageDays) {
 
 		Assert.hasText(name, "Наименование группы должно быть указано");
 
 		Analysis saved = analysisRepository.save(
 				Analysis.builder()
 						.name(name)
+						.averageDays(averageDays)
 						.build());
 
 		MetaUtils.applyChanges(analysisAssetRepository, assets,
@@ -66,15 +68,17 @@ public class AnalysisService {
 	public Analysis update(
 			Integer id,
 			String name,
-			List<AnalysisAssetDTO> assets) {
+			List<AnalysisAssetDTO> assets,
+			Integer averageDays) {
 
 		Assert.notNull(id, "Id должен быть указан");
 		Assert.hasText(name, "Наименование группы должно быть указано");
 
 		Analysis saved = analysisRepository.findById(id)
-				.orElseThrow(() -> new AnalysisNotFoundException(id));
+				.orElseThrow(() -> new StrategyNotFoundException(id));
 
 		saved.setName(name);
+		saved.setAverageDays(averageDays);
 
 		analysisRepository.save(saved);
 

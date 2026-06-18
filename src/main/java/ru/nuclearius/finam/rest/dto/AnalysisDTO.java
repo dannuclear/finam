@@ -15,4 +15,6 @@ public class AnalysisDTO {
     private String name;
 
     private List<AnalysisAssetDTO> assets;
+
+    private Integer averageDays;
 }

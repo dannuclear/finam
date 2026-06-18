@@ -20,6 +20,9 @@ export const AnalysisForm = ({
                 <Grid size={12}>
                     <TextFieldElement name='name' label='Наименование' required />
                 </Grid>
+                <Grid size={12}>
+                    <TextFieldElement type='number' name='averageDays' label='Дней средней' required />
+                </Grid>
             </Grid>
         </FormContainer>
     )

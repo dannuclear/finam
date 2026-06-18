@@ -6,9 +6,13 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Bar {
     private Instant timestamp;
 
@@ -63,5 +67,10 @@ public class Bar {
 
     public Bar withDivide(double value) {
         return withDivide(BigDecimal.valueOf(value));
+    }
+
+    @Override
+    public Bar clone() {
+        return new Bar(timestamp, open, high, low, close, volume);
     }
 }

@@ -33,6 +33,14 @@ const router = createBrowserRouter([
         lazy: () => import("@pages/trade-groups")
       },
       {
+        path: ROUTES.STRATEGIES,
+        lazy: () => import("@pages/strategies")
+      },
+      {
+        path: ROUTES.BACKTEST,
+        lazy: () => import("@pages/backtest")
+      },
+      {
         path: ROUTES.ANALYSIS_RELATIVE_SPREADS,
         lazy: () => import("@pages/analysis-relative-spreads")
       },

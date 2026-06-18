@@ -17,6 +17,8 @@ export type TradeGroupReferenceAsset = ApiComponents["schemas"]["TradeGroupRefer
 export type Asset = ApiComponents["schemas"]["Asset"]
 export type Series = ApiComponents["schemas"]["Series"]
 export type Analysis = ApiComponents["schemas"]["Analysis"]
+export type Strategy = ApiComponents["schemas"]["Strategy"]
+export type StrategyAsset = ApiComponents["schemas"]["StrategyAsset"] & Partial<WithChangeStatus>
 export type AnalysisAsset = ApiComponents["schemas"]["AnalysisAsset"] & Partial<WithChangeStatus>
 
 

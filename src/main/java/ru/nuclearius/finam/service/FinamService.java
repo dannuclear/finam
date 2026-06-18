@@ -1,16 +1,13 @@
 package ru.nuclearius.finam.service;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -45,7 +42,6 @@ import ru.nuclearius.finam.client.dto.TransactionList.Transaction;
 import ru.nuclearius.finam.db.Asset;
 import ru.nuclearius.finam.grpc.JwtTokenHolder;
 import ru.nuclearius.finam.repository.AssetRepository;
-import ru.nuclearius.finam.service.domain.BarsWithDescriptiveStatistics;
 import ru.nuclearius.finam.service.mapper.ProtoMapper;
 import ru.nuclearius.finam.utils.DateUtils;
 import ru.nuclearius.finam.utils.TimeFrameUtils;
@@ -176,6 +172,7 @@ public class FinamService {
      *                  end.
      * @return Агрегированные свечи
      */
+    @Cacheable(value = "bars", key = "{#symbol, #timeFrame.name(), #startTime, #endTime}")
     public List<Bar> bars(
             String symbol,
             TimeFrame timeFrame,
@@ -197,44 +194,5 @@ public class FinamService {
         long durationMillis = Duration.between(start, end).toMillis();
         log.debug("Finish retrieve bars for: {} (took {} ms)", symbol, durationMillis);
         return protoMapper.toDomain(response).getBars();
-    }
-
-    /**
-     * Получение исторических данных по инструменту (агрегированные свечи)
-     * асинхронно
-     *
-     * @param symbol    Символ инструмента
-     * @param timeFrame Необходимый таймфрейм
-     * @param startTime Optional. Inclusive start of the interval. If specified, a
-     *                  Timestamp matching this interval will have to be the same or
-     *                  after the start.
-     * @param endTime   Optional. Exclusive end of the interval. If specified, a
-     *                  Timestamp matching this interval will have to be before the
-     *                  end.
-     * @return Future Агрегированные свечи
-     */
-    @Async("barsExecutor")
-    public CompletableFuture<List<Bar>> barsAsync(
-            String symbol,
-            TimeFrame timeFrame,
-            Instant startTime,
-            Instant endTime) {
-        List<Bar> bars = bars(symbol, timeFrame, startTime, endTime);
-        return CompletableFuture.completedFuture(bars);
-    }
-
-    @Async("barsExecutor")
-    public CompletableFuture<BarsWithDescriptiveStatistics> barsWithDescriptiveStatisticsAsync(
-            String symbol,
-            TimeFrame timeFrame,
-            Instant startTime,
-            Instant endTime) {
-        List<Bar> bars = bars(symbol, timeFrame, startTime, endTime);
-        DescriptiveStatistics ds = new DescriptiveStatistics();
-        bars.stream()
-                .map(Bar::getClose)
-                .map(BigDecimal::doubleValue)
-                .forEach(ds::addValue);
-        return CompletableFuture.completedFuture(new BarsWithDescriptiveStatistics(bars, ds));
     }
 }
