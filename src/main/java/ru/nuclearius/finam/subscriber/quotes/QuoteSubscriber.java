@@ -2,6 +2,8 @@ package ru.nuclearius.finam.subscriber.quotes;
 
 import java.util.Set;
 
+import org.springframework.stereotype.Component;
+
 import grpc.tradeapi.v1.marketdata.MarketDataServiceGrpc;
 import grpc.tradeapi.v1.marketdata.SubscribeQuoteRequest;
 import grpc.tradeapi.v1.marketdata.SubscribeQuoteResponse;
@@ -14,6 +16,7 @@ import ru.nuclearius.finam.streamer.SseEmitterSymbolRegistry.AssetsChangeListene
 import ru.nuclearius.finam.subscriber.AbstractBackoffObserver;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class QuoteSubscriber extends AbstractBackoffObserver<SubscribeQuoteRequest, SubscribeQuoteResponse>
         implements AssetsChangeListener {

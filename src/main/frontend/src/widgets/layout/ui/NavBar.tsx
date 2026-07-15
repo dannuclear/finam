@@ -3,6 +3,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import { AppBar, Box, Button, IconButton, Toolbar } from "@mui/material"
 import { ROUTES } from "@shared/routes"
 import { DefaultIcon } from "@shared/ui"
+import { TokenInfoWidget } from "@widgets/token"
 import React, { useState } from 'react'
 import { useNavigate } from "react-router"
 import MainMenu, { type MainMenuItem } from "./MainMenu"
@@ -129,7 +130,9 @@ export const NavBar = () => {
                     </Box>
 
                     <Box sx={{ textAlign: "end" }}>
-
+                        <React.Suspense fallback="Loading">
+                            <TokenInfoWidget />
+                        </React.Suspense>
                     </Box>
                 </Toolbar>
             </AppBar>

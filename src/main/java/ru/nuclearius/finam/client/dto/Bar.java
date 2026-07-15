@@ -27,6 +27,11 @@ public class Bar {
         return timestamp.toEpochMilli();
     }
 
+    @JsonProperty
+    public long seconds() {
+        return timestamp.getEpochSecond();
+    }
+
     public Bar withPriceOffset(BigDecimal offset) {
         if (offset == null || BigDecimal.ZERO.equals(offset))
             return this;

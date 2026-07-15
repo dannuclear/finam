@@ -1,10 +1,12 @@
 package ru.nuclearius.finam.streamer;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.BiConsumer;
 
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.DataWithMediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +87,11 @@ public class SseEmitterSymbolRegistry {
         return emittersMap.get(symbol);
     }
 
+    protected boolean hasEmitters(String symbol) {
+        Collection<SseEmitter> emitters = getEmitters(symbol);
+        return emitters != null && !emitters.isEmpty();
+    }
+
     protected void forEachEmitter(BiConsumer<String, SseEmitter> consumer) {
         emittersMap.forEach((symbol, emitters) -> emitters.forEach(emitter -> consumer.accept(symbol, emitter)));
     }
@@ -105,5 +112,21 @@ public class SseEmitterSymbolRegistry {
 
     public static interface AssetsChangeListener {
         void onChange(Set<String> newSet);
+    }
+
+    public void send(String symbol, Set<DataWithMediaType> data) {
+        Set<SseEmitter> emitters = getEmitters(symbol);
+
+        if (emitters == null) {
+            return;
+        }
+
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(data);
+            } catch (Exception ex) {
+                remove(symbol, emitter);
+            }
+        }
     }
 }

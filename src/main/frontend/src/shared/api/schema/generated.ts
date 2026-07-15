@@ -228,6 +228,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/finam/token-details": {
         parameters: {
             query?: never;
@@ -269,6 +285,22 @@ export interface paths {
         };
         /** Subscribe to quotes via SSE */
         get: operations["subscribeToAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finam/assets/{symbol}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orders"];
         put?: never;
         post?: never;
         delete?: never;
@@ -458,6 +490,8 @@ export interface components {
             close?: number;
             volume?: number;
             /** Format: int64 */
+            seconds?: number;
+            /** Format: int64 */
             mills?: number;
         };
         Indicator: {
@@ -572,9 +606,28 @@ export interface components {
             /** Format: int32 */
             panelNum?: number;
             bars?: components["schemas"]["Bar"][];
+            trades?: components["schemas"]["Trade"][];
             extraParams?: {
                 [key: string]: unknown;
             };
+        };
+        Trade: {
+            tradeId: string;
+            symbol: string;
+            price?: number;
+            size?: number;
+            /** @enum {string} */
+            side?: "SIDE_UNSPECIFIED" | "SIDE_BUY" | "SIDE_SELL" | "UNRECOGNIZED";
+            /** Format: date-time */
+            timestamp?: string;
+            orderId?: string;
+            accountId?: string;
+            comment?: string;
+            /** Format: int64 */
+            seconds?: number;
+            /** Format: int64 */
+            mills?: number;
+            sum?: number;
         };
         PageMetadata: {
             /** Format: int64 */
@@ -625,6 +678,41 @@ export interface components {
             lineColor?: string;
             /** Format: int32 */
             lineWidth?: number;
+        };
+        Order: {
+            accountId?: string;
+            symbol?: string;
+            quantity?: number;
+            /** @enum {string} */
+            side?: "SIDE_UNSPECIFIED" | "SIDE_BUY" | "SIDE_SELL" | "UNRECOGNIZED";
+            /** @enum {string} */
+            type?: "ORDER_TYPE_UNSPECIFIED" | "ORDER_TYPE_MARKET" | "ORDER_TYPE_LIMIT" | "ORDER_TYPE_STOP" | "ORDER_TYPE_STOP_LIMIT" | "ORDER_TYPE_MULTI_LEG" | "UNRECOGNIZED";
+            /** @enum {string} */
+            timeInForce?: "TIME_IN_FORCE_UNSPECIFIED" | "TIME_IN_FORCE_DAY" | "TIME_IN_FORCE_GOOD_TILL_CANCEL" | "TIME_IN_FORCE_GOOD_TILL_CROSSING" | "TIME_IN_FORCE_EXT" | "TIME_IN_FORCE_ON_OPEN" | "TIME_IN_FORCE_ON_CLOSE" | "TIME_IN_FORCE_IOC" | "TIME_IN_FORCE_FOK" | "UNRECOGNIZED";
+            limitPrice?: number;
+            stopPrice?: number;
+            /** @enum {string} */
+            stopCondition?: "STOP_CONDITION_UNSPECIFIED" | "STOP_CONDITION_LAST_UP" | "STOP_CONDITION_LAST_DOWN" | "UNRECOGNIZED";
+            clientOrderId?: string;
+            /** @enum {string} */
+            validBefore?: "VALID_BEFORE_UNSPECIFIED" | "VALID_BEFORE_END_OF_DAY" | "VALID_BEFORE_GOOD_TILL_CANCEL" | "VALID_BEFORE_GOOD_TILL_DATE" | "UNRECOGNIZED";
+            comment?: string;
+        };
+        OrderState: {
+            orderId?: string;
+            execId?: string;
+            /** @enum {string} */
+            status?: "ORDER_STATUS_UNSPECIFIED" | "ORDER_STATUS_NEW" | "ORDER_STATUS_PARTIALLY_FILLED" | "ORDER_STATUS_FILLED" | "ORDER_STATUS_DONE_FOR_DAY" | "ORDER_STATUS_CANCELED" | "ORDER_STATUS_REPLACED" | "ORDER_STATUS_PENDING_CANCEL" | "ORDER_STATUS_REJECTED" | "ORDER_STATUS_SUSPENDED" | "ORDER_STATUS_PENDING_NEW" | "ORDER_STATUS_EXPIRED" | "ORDER_STATUS_FAILED" | "ORDER_STATUS_FORWARDING" | "ORDER_STATUS_WAIT" | "ORDER_STATUS_DENIED_BY_BROKER" | "ORDER_STATUS_REJECTED_BY_EXCHANGE" | "ORDER_STATUS_WATCHING" | "ORDER_STATUS_EXECUTED" | "ORDER_STATUS_DISABLED" | "ORDER_STATUS_LINK_WAIT" | "ORDER_STATUS_SL_GUARD_TIME" | "ORDER_STATUS_SL_EXECUTED" | "ORDER_STATUS_SL_FORWARDING" | "ORDER_STATUS_TP_GUARD_TIME" | "ORDER_STATUS_TP_EXECUTED" | "ORDER_STATUS_TP_CORRECTION" | "ORDER_STATUS_TP_FORWARDING" | "ORDER_STATUS_TP_CORR_GUARD_TIME" | "UNRECOGNIZED";
+            order?: components["schemas"]["Order"];
+            /** Format: date-time */
+            transactAt?: string;
+            /** Format: date-time */
+            acceptAt?: string;
+            /** Format: date-time */
+            withdrawAt?: string;
+            initialQuantity?: number;
+            executedQuantity?: number;
+            remainingQuantity?: number;
         };
         MDPermission: {
             /** @enum {string} */
@@ -714,20 +802,6 @@ export interface components {
             units?: string;
             /** Format: int32 */
             nanos?: number;
-        };
-        Trade: {
-            tradeId?: string;
-            symbol?: string;
-            price?: number;
-            size?: number;
-            /** @enum {string} */
-            side?: "SIDE_UNSPECIFIED" | "SIDE_BUY" | "SIDE_SELL" | "UNRECOGNIZED";
-            /** Format: date-time */
-            timestamp?: string;
-            orderId?: string;
-            accountId?: string;
-            comment?: string;
-            sum?: number;
         };
         TradeHistory: {
             trades?: components["schemas"]["Trade"][];
@@ -1262,6 +1336,26 @@ export interface operations {
             };
         };
     };
+    findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrderState"][];
+                };
+            };
+        };
+    };
     tokenDetails: {
         parameters: {
             query?: never;
@@ -1328,6 +1422,28 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": unknown;
+                };
+            };
+        };
+    };
+    orders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrderState"][];
                 };
             };
         };
@@ -1469,6 +1585,7 @@ export interface operations {
                 averageStartTime: string;
                 averageEndTime: string;
                 zEstimate?: boolean;
+                withTrades?: boolean;
             };
             header?: never;
             path: {

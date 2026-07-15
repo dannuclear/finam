@@ -8,6 +8,7 @@ export type SearchResultDTO = { objectid: number, fullName: string, objectguid: 
 
 // export type Meta = ApiComponents["schemas"]["Meta"]
 export type Account = ApiComponents["schemas"]["Account"]
+export type TokenDetails = ApiComponents["schemas"]["TokenDetails"]
 export type TradeHistory = ApiComponents["schemas"]["TradeHistory"]
 export type Transaction = ApiComponents["schemas"]["Transaction"]
 export type TimeFrame = operations["bars"]["parameters"]["query"]["timeFrame"]
@@ -18,6 +19,7 @@ export type Asset = ApiComponents["schemas"]["Asset"]
 export type Series = ApiComponents["schemas"]["Series"]
 export type Analysis = ApiComponents["schemas"]["Analysis"]
 export type Strategy = ApiComponents["schemas"]["Strategy"]
+export type OrderState = ApiComponents["schemas"]["OrderState"]
 export type StrategyAsset = ApiComponents["schemas"]["StrategyAsset"] & Partial<WithChangeStatus>
 export type AnalysisAsset = ApiComponents["schemas"]["AnalysisAsset"] & Partial<WithChangeStatus>
 

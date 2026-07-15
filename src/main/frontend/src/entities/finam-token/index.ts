@@ -1,3 +1,2 @@
-import useTokenDetails from "./api/use-token-details";
-
-export { useTokenDetails };
+export { useTokenDetails } from "./api/use-token-details"
+export { TokenInfo } from "./ui/TokenInfo"

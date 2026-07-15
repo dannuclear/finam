@@ -2,6 +2,7 @@ package ru.nuclearius.finam.rest.controller;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +33,9 @@ import ru.nuclearius.finam.client.dto.TransactionList;
 import ru.nuclearius.finam.db.Asset;
 import ru.nuclearius.finam.service.BarService;
 import ru.nuclearius.finam.service.FinamService;
-import ru.nuclearius.finam.streamer.QuoteStreamer;
+import ru.nuclearius.finam.service.OrderService;
+import ru.nuclearius.finam.service.domain.OrderState;
+import ru.nuclearius.finam.streamer.QuoteOrderStreamer;
 
 @RestController
 @RequestMapping("api/v1/finam")
@@ -40,7 +43,8 @@ import ru.nuclearius.finam.streamer.QuoteStreamer;
 public class FinamController {
     private final FinamService finamService;
     private final BarService barService;
-    private final QuoteStreamer quoteStreamer;
+    private final QuoteOrderStreamer quoteStreamer;
+    private final OrderService orderService;
 
     @GetMapping("token-details")
     public TokenDetails tokenDetails() {
@@ -92,6 +96,11 @@ public class FinamController {
             @RequestParam OffsetDateTime startTime,
             @RequestParam OffsetDateTime endTime) {
         return finamService.bars(symbol, timeFrame, startTime.toInstant(), endTime.toInstant());
+    }
+
+    @GetMapping("assets/{symbol}/orders")
+    public Collection<OrderState> orders(@PathVariable String symbol) {
+        return orderService.findByAsset(symbol);
     }
 
     @GetMapping("assets/bars")

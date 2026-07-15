@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.nuclearius.finam.client.dto.Bar;
+import ru.nuclearius.finam.client.dto.TradeHistory;
 
 @Getter
 @Setter
@@ -23,6 +24,8 @@ public class Series {
     private Boolean enabled;
     private Integer panelNum;
     private List<Bar> bars;
+
+    private List<TradeHistory.Trade> trades;
 
     private Map<String, Object> extraParams;
 }

@@ -11,6 +11,7 @@ import grpc.tradeapi.v1.auth.AuthServiceGrpc.AuthServiceBlockingStub;
 import grpc.tradeapi.v1.auth.AuthServiceGrpc.AuthServiceStub;
 import grpc.tradeapi.v1.marketdata.MarketDataServiceGrpc.MarketDataServiceBlockingStub;
 import grpc.tradeapi.v1.marketdata.MarketDataServiceGrpc.MarketDataServiceStub;
+import grpc.tradeapi.v1.orders.OrdersServiceGrpc.OrdersServiceStub;
 
 @Configuration
 @ImportGrpcClients(types = {
@@ -18,9 +19,10 @@ import grpc.tradeapi.v1.marketdata.MarketDataServiceGrpc.MarketDataServiceStub;
         AssetsServiceBlockingStub.class,
         AuthServiceBlockingStub.class,
         MarketDataServiceStub.class,
-        MarketDataServiceBlockingStub.class
+        MarketDataServiceBlockingStub.class,
+        OrdersServiceStub.class
 })
-@ImportGrpcClients(types = { AuthServiceStub.class }, prefix = "auth")
+@ImportGrpcClients(types = { AuthServiceStub.class }, target = "auth")
 public class FinamConfig {
 
     @Bean

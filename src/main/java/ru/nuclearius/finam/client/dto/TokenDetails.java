@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class TokenDetails {
-
     private Instant createdAt;
     private Instant expiresAt;
     private List<MDPermission> mdPermissions;

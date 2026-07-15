@@ -10,8 +10,8 @@ import type { LegendItem } from "@widgets/chart/ui/legend";
 import Legend from "@widgets/chart/ui/legend";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
-import { type LineData, type LineWidth, type UTCTimestamp } from "lightweight-charts";
-import { LineSeries, Pane, TimeScale, TimeScaleFitContentTrigger } from "lightweight-charts-react-components";
+import { type LineData, type LineWidth, type SeriesMarker, type UTCTimestamp } from "lightweight-charts";
+import { LineSeries, Markers, Pane, TimeScale, TimeScaleFitContentTrigger } from "lightweight-charts-react-components";
 import { useMemo, useState } from "react";
 
 const Index = () => {
@@ -34,7 +34,8 @@ const Index = () => {
         averageTimeFrame: TIMEFRAMES[8].value,
         averageStartTime: averageStartTime,
         averageEndTime: averageEndTime,
-        zEstimate: zEstimate
+        zEstimate: zEstimate,
+        withTrades: true
     })
 
     const toggleEnabled = (item: LegendItem) => {
@@ -66,15 +67,24 @@ const Index = () => {
                 bars: (item.bars ?? [])
                     .filter((bar) =>
                         bar.close != null &&
-                        bar.mills != null
+                        bar.seconds != null
                     )
                     .map<LineData>((bar) => ({
-                        time: bar.mills as UTCTimestamp,
+                        time: bar.seconds as UTCTimestamp,
                         value: bar.close as number,
                         customValues: {
                             realPrice: bar.close as number
                         }
                     })),
+                trades: (item.trades ?? [])
+                    .map<SeriesMarker<UTCTimestamp>>(trade => ({
+                        time: trade.seconds as UTCTimestamp,
+                        position: trade.side === "SIDE_BUY" ? "belowBar" : "aboveBar",
+                        shape: trade.side === "SIDE_BUY" ? "arrowUp" : "arrowDown",
+                        color: trade.side === "SIDE_BUY" ? "#00ff00" : "#ff0000",
+                        text: `${trade.price}`,
+                        price: trade.price
+                    })).sort(m=>m.time)
             };
 
             seriesResult.push(preparedItem);
@@ -86,7 +96,7 @@ const Index = () => {
                 enabled: enabled
             });
         }
-
+        
         return {
             series: seriesResult,
             legendOptions: legendResult,
@@ -148,7 +158,11 @@ const Index = () => {
                                     priceLineVisible: false
                                 }}
                                 alwaysReplaceData
-                            />
+                            >
+                                <Markers
+                                    key={`${s.id}-${timeFrame.value}-markers`}
+                                    markers={s.id ? (s.trades ?? []) : []} />
+                            </LineSeries>
                         )}
                     </Pane>
                     <TimeScale>

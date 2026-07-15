@@ -1,7 +1,9 @@
 package ru.nuclearius.finam.rest.controller;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.springdoc.core.annotations.ParameterObject;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import grpc.tradeapi.v1.marketdata.TimeFrame;
 import lombok.RequiredArgsConstructor;
+import ru.nuclearius.finam.client.dto.TradeHistory;
 import ru.nuclearius.finam.db.Analysis;
 import ru.nuclearius.finam.db.AnalysisAsset;
 import ru.nuclearius.finam.rest.dto.AnalysisDTO;
@@ -26,6 +29,7 @@ import ru.nuclearius.finam.rest.dto.Series;
 import ru.nuclearius.finam.rest.mapper.RESTMapper;
 import ru.nuclearius.finam.service.AnalysisService;
 import ru.nuclearius.finam.service.BarService;
+import ru.nuclearius.finam.service.FinamService;
 
 @RestController
 @RequestMapping("api/v1/analysis")
@@ -33,6 +37,7 @@ import ru.nuclearius.finam.service.BarService;
 public class AnalysisController {
     private final AnalysisService analysisService;
     private final BarService barService;
+    private final FinamService finamService;
     private final RESTMapper restMapper;
 
     @GetMapping
@@ -76,7 +81,12 @@ public class AnalysisController {
             @RequestParam TimeFrame averageTimeFrame,
             @RequestParam Instant averageStartTime,
             @RequestParam Instant averageEndTime,
-            @RequestParam(defaultValue = "false") Boolean zEstimate) {
+            @RequestParam(defaultValue = "false") Boolean zEstimate,
+            @RequestParam(defaultValue = "false") Boolean withTrades) {
+
+        Map<String, List<TradeHistory.Trade>> tradesGroups = withTrades
+                ? finamService.getTradesGroups("2029595", 10, startTime, endTime)
+                : Collections.emptyMap();
 
         var futures = analysisService.assets(id).stream().map(aAsset -> barService
                 .barsWithDescriptiveStatisticsAsync(aAsset.getAsset().getSymbol(), averageTimeFrame, averageStartTime,
@@ -96,9 +106,14 @@ public class AnalysisController {
                                                 .withPriceOffset(-1)
                                                 .withMultiply(100);
                                 })
-                                .toList())))
+                                .toList(),
+                        tradesGroups.get(aAsset.getAsset().getSymbol()) != null ? tradesGroups
+                                .get(aAsset.getAsset().getSymbol()).stream().map(trade -> trade
+                                        .withDivide(bds.ds().getMean() * 10)
+                                        .withPriceOffset(-1)
+                                        .withMultiply(100))
+                                .toList() : null)))
                 .toList();
-
         return futures.stream().map(CompletableFuture::join).toList();
     }
 }

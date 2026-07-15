@@ -1,6 +1,8 @@
 package ru.nuclearius.finam.subscriber.token;
 
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
 import grpc.tradeapi.v1.auth.AuthServiceGrpc.AuthServiceStub;
 import grpc.tradeapi.v1.auth.SubscribeJwtRenewalRequest;
@@ -11,6 +13,8 @@ import ru.nuclearius.finam.grpc.JwtTokenHolder;
 import ru.nuclearius.finam.subscriber.AbstractBackoffObserver;
 
 @Slf4j
+@Order(0)
+@Component
 @RequiredArgsConstructor
 public class JwtRenewalSubscriber
         extends AbstractBackoffObserver<SubscribeJwtRenewalRequest, SubscribeJwtRenewalResponse> {

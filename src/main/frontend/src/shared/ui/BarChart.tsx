@@ -14,7 +14,7 @@ const formatMap: Record<TickMarkType, string> = {
 };
 
 const formatTime = (time: Time, pattern: string, locale?: string) =>
-    dayjs(time as number).locale(locale || "ru").format(pattern);
+    dayjs.unix(time as number).locale(locale || "ru").format(pattern);
 
 
 const chartOptions: DeepPartial<ChartOptions> = {

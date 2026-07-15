@@ -3,7 +3,9 @@ package ru.nuclearius.finam.service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -102,6 +104,16 @@ public class FinamService {
                 .build();
         TradesResponse response = grpcAccountsService.trades(request);
         return protoMapper.toDomain(response);
+    }
+
+    public Map<String, List<TradeHistory.Trade>> getTradesGroups(
+            String accountId,
+            Integer limit,
+            Instant startTime,
+            Instant endTime) {
+        TradeHistory tradeHistory = getTrades(accountId, limit, startTime, endTime);
+        return tradeHistory.getTrades().stream()
+                .collect(Collectors.groupingBy(TradeHistory.Trade::getSymbol, Collectors.toList()));
     }
 
     /**

@@ -20,6 +20,8 @@ import ru.nuclearius.finam.client.dto.AssetInfo;
 import ru.nuclearius.finam.client.dto.TokenDetails;
 import ru.nuclearius.finam.client.dto.TradeHistory;
 import ru.nuclearius.finam.client.dto.TransactionList;
+import ru.nuclearius.finam.service.domain.Order;
+import ru.nuclearius.finam.service.domain.OrderState;
 
 @Mapper(collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED)
 public interface ProtoMapper extends ProtobufStandardMappings {
@@ -47,4 +49,8 @@ public interface ProtoMapper extends ProtobufStandardMappings {
     AllQuotes toDomain(SubscribeQuoteResponse proto);
 
     AssetInfo toDomain(GetAssetResponse proto);
+
+    Order toDomain(grpc.tradeapi.v1.orders.Order proto);
+
+    OrderState toDomain(grpc.tradeapi.v1.orders.OrderState proto);
 }

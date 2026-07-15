@@ -1,19 +1,20 @@
 package ru.nuclearius.finam;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
-import grpc.tradeapi.v1.auth.AuthServiceGrpc.AuthServiceStub;
-import grpc.tradeapi.v1.marketdata.MarketDataServiceGrpc;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.nuclearius.finam.grpc.JwtTokenHolder;
 import ru.nuclearius.finam.manager.SubscriptionManager;
-import ru.nuclearius.finam.service.mapper.ProtoMapper;
-import ru.nuclearius.finam.streamer.QuoteStreamer;
+import ru.nuclearius.finam.service.OrderService;
+import ru.nuclearius.finam.streamer.QuoteOrderStreamer;
+import ru.nuclearius.finam.subscriber.orders.AccountOrdersSubscriber;
 import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriber;
 import ru.nuclearius.finam.subscriber.token.JwtRenewalSubscriber;
 
@@ -22,28 +23,32 @@ import ru.nuclearius.finam.subscriber.token.JwtRenewalSubscriber;
 @RequiredArgsConstructor
 @Profile("!test")
 public class StartupInitializer {
-
-    private final AuthServiceStub authServiceStub;
-    private final MarketDataServiceGrpc.MarketDataServiceStub marketDataService;
-    private final Environment environment;
     private final JwtTokenHolder tokenHolder;
     private final SubscriptionManager subscriptionManager;
-    private final ProtoMapper protoMapper;
-    private final QuoteStreamer quoteStreamer;
+    private final TaskExecutor singleTaskExecutor;
+
+    private final JwtRenewalSubscriber jwtRenewalSubscriber;
+    private final QuoteSubscriber quoteSubscriber;
+    private final AccountOrdersSubscriber accountOrdersSubscriber;
+
+    private final QuoteOrderStreamer quoteOrderStreamer;
+
+    private final OrderService orderService;
 
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
-        JwtRenewalSubscriber subscriber = new JwtRenewalSubscriber(authServiceStub, environment, tokenHolder);
+        subscriptionManager.register("jwtRenewal", jwtRenewalSubscriber);
+        jwtRenewalSubscriber.start();
 
-        subscriptionManager.register("jwtRenewal", subscriber);
+        tokenHolder.awaitToken(Duration.ofSeconds(5)).thenAcceptAsync(token -> {
+            subscriptionManager.register("quoteSubscriber", quoteSubscriber);
+            quoteSubscriber.start();
+            subscriptionManager.register("accountOrdersSubscriber", accountOrdersSubscriber);
+            accountOrdersSubscriber.start();
+        }, singleTaskExecutor);
 
-        subscriber.start();
-
-        QuoteSubscriber quoteSubscriber = new QuoteSubscriber(marketDataService, protoMapper, quoteStreamer, quoteStreamer);
-        quoteStreamer.setAssetsChangeListener(quoteSubscriber);
-        subscriptionManager.register("broadcastQuote", quoteSubscriber);
-
-        quoteSubscriber.start();
+        quoteOrderStreamer.setAssetsChangeListener(quoteSubscriber);
+        accountOrdersSubscriber.addListener(quoteOrderStreamer);
+        accountOrdersSubscriber.addListener(orderService);
     }
-
 }
