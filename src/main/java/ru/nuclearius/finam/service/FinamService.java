@@ -2,6 +2,7 @@ package ru.nuclearius.finam.service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -112,7 +113,7 @@ public class FinamService {
             Instant startTime,
             Instant endTime) {
         TradeHistory tradeHistory = getTrades(accountId, limit, startTime, endTime);
-        return tradeHistory.getTrades().stream()
+        return tradeHistory.getTrades().stream().sorted(Comparator.comparing(TradeHistory.Trade::getTimestamp))
                 .collect(Collectors.groupingBy(TradeHistory.Trade::getSymbol, Collectors.toList()));
     }
 

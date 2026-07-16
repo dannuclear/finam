@@ -84,11 +84,10 @@ const Index = () => {
                         color: trade.side === "SIDE_BUY" ? "#00ff00" : "#ff0000",
                         text: `${trade.price}`,
                         price: trade.price
-                    })).sort(m=>m.time)
+                    }))
             };
 
             seriesResult.push(preparedItem);
-
             legendResult.push({
                 id,
                 label: item.name ?? "no-name",
@@ -96,7 +95,7 @@ const Index = () => {
                 enabled: enabled
             });
         }
-        
+
         return {
             series: seriesResult,
             legendOptions: legendResult,
