@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -27,10 +28,13 @@ public class AveragePriceSpreadController {
     }
 
     @PostMapping("/start")
-    public void start() {
-        // spreadTrader.start(Set.of("SU26248RMFS3@MISX"));
-        // spreadTrader.start(Set.of("SU26248RMFS3@MISX", "SU26254RMFS1@MISX"));
-        spreadTrader.start(Set.of("SU26248RMFS3@MISX", "SU26254RMFS1@MISX", "SU26253RMFS3@MISX", "SU26238RMFS4@MISX"));
+    public void start(
+            @RequestParam Set<String> assets,
+            @RequestParam Integer fastMaCount,
+            @RequestParam Integer daysCount,
+            @RequestParam Double spread
+        ) {
+        spreadTrader.start(assets, daysCount, fastMaCount, spread);
     }
 
     @PostMapping("/stop")

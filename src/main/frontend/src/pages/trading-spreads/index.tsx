@@ -1,10 +1,19 @@
+import { AssetSelect } from "@features/asset/ui/asset-select"
 import { useTradingSpreadsStart, useTradingSpreadsStatus, useTradingSpreadsStop, useTradingSpreadsSymbols } from "@features/trading-spreads"
-import { Button } from "@mui/material"
+import { Button, TextField } from "@mui/material"
 import Grid from "@mui/material/Grid"
+import type { Asset } from "@shared/api/schema"
 import { TIMEFRAMES, type TimeFrameConfig } from "@shared/model/timeframes"
 import { BarChart } from "@shared/ui"
 import { LineSeries, Pane, type SeriesApiRef } from "lightweight-charts-react-components"
 import { useEffect, useRef, useState } from "react"
+
+const defaultAssets: Asset[] = [
+    { name: "ОФЗ 26248", symbol: "SU26248RMFS3@MISX" },
+    { name: "ОФЗ 26254", symbol: "SU26254RMFS1@MISX" },
+    { name: "ОФЗ 26238", symbol: "SU26238RMFS4@MISX" },
+    { name: "ОФЗ 26253", symbol: "SU26253RMFS3@MISX" }
+]
 
 const AssetListPage = () => {
     const [timeFrame, setTimeFrame] = useState<TimeFrameConfig>(TIMEFRAMES[0]);
@@ -18,6 +27,25 @@ const AssetListPage = () => {
     const { mutate: stop, isPending: isStopPending } = useTradingSpreadsStop()
     const { data: isRunning } = useTradingSpreadsStatus()
 
+    const [assets, setAssets] = useState<Asset[]>(defaultAssets)
+    const [fastMaCount, setFastMaCount] = useState<number>(4)
+    const [daysCount, setDaysCount] = useState<number>(6)
+    const [spread, setSpread] = useState<number>(0.2)
+
+    const startInternal = () => {
+        if (assets)
+            start({
+                params: {
+                    query: {
+                        assets: assets?.map(a => a.symbol ?? ""),
+                        fastMaCount: fastMaCount,
+                        daysCount: daysCount,
+                        spread: spread
+                    }
+                }
+            })
+    }
+
     useEffect(() => {
         if (!isRunning) {
             return
@@ -27,7 +55,7 @@ const AssetListPage = () => {
 
         source.addEventListener("quote", (event) => {
             const quote = JSON.parse(event.data)
-            console.log(quote);
+            // console.log(quote);
 
             const ref = seriesRefs.current.get(quote.symbol)
 
@@ -88,11 +116,32 @@ const AssetListPage = () => {
 
     return (
         <Grid container spacing={1}>
-            <Grid size={6}>
-                {data?.map(s => s).join('; ')}
+            <Grid size={12}>
+                <AssetSelect
+                    value={assets}
+                    onChange={(_, v) => (setAssets(v), console.log(v))}
+                    multiple />
+            </Grid>
+            <Grid size={1}>
+                <TextField
+                    label="Быстрая средняя"
+                    value={fastMaCount}
+                    onChange={e => setFastMaCount(Number(e.target.value))} />
+            </Grid>
+            <Grid size={1}>
+                <TextField
+                    label="Дней средней"
+                    value={daysCount}
+                    onChange={e => setDaysCount(Number(e.target.value))} />
+            </Grid>
+            <Grid size={1}>
+                <TextField
+                    label="Спред"
+                    value={spread}
+                    onChange={e => setSpread(Number(e.target.value))} />
             </Grid>
             <Grid size={6} container spacing={1}>
-                <Button onClick={() => start({})} disabled={isRunning} loading={isStartPending}>Start</Button>
+                <Button onClick={() => startInternal()} disabled={isRunning} loading={isStartPending}>Start</Button>
                 <Button onClick={() => stop({})} disabled={!isRunning} loading={isStopPending}>Stop</Button>
             </Grid>
             <Grid size={12}>

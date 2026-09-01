@@ -1426,7 +1426,12 @@ export interface operations {
     };
     start: {
         parameters: {
-            query?: never;
+            query: {
+                assets: string[];
+                fastMaCount: number;
+                daysCount: number;
+                spread: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import grpc.tradeapi.v1.marketdata.TimeFrame;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ru.nuclearius.finam.client.dto.TradeHistory;
 import ru.nuclearius.finam.db.Analysis;
 import ru.nuclearius.finam.db.AnalysisAsset;
@@ -31,6 +32,7 @@ import ru.nuclearius.finam.service.AnalysisService;
 import ru.nuclearius.finam.service.BarService;
 import ru.nuclearius.finam.service.FinamService;
 
+@Slf4j
 @RestController
 @RequestMapping("api/v1/analysis")
 @RequiredArgsConstructor
@@ -84,10 +86,15 @@ public class AnalysisController {
             @RequestParam(defaultValue = "false") Boolean zEstimate,
             @RequestParam(defaultValue = "false") Boolean withTrades) {
 
-        Map<String, List<TradeHistory.Trade>> tradesGroups = withTrades
-                ? finamService.getTradesGroups("2029595", 100, startTime, endTime)
-                : Collections.emptyMap();
-
+        Map<String, List<TradeHistory.Trade>> tg = Collections.emptyMap();
+        try {
+            tg = withTrades
+                    ? finamService.getTradesGroups("2029595", 100, startTime, endTime)
+                    : Collections.emptyMap();
+        } catch (Exception e) { 
+            log.error("Error get trades: {}", e.getMessage());
+        }
+        Map<String, List<TradeHistory.Trade>> tradesGroups = tg;
         var futures = analysisService.assets(id).stream().map(aAsset -> barService
                 .barsWithDescriptiveStatisticsAsync(aAsset.getAsset().getSymbol(), averageTimeFrame, averageStartTime,
                         averageEndTime)

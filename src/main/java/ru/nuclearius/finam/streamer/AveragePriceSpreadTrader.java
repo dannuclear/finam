@@ -14,6 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.DataWithMediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.ta4j.core.Bar;
@@ -53,9 +54,9 @@ import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber.QuoteListe
 @RequiredArgsConstructor
 public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implements QuoteListener {
     private Set<String> symbols;
-    private final Integer fastMaBarCount = 4;
+    private Integer fastMaBarCount = 4;
+    private Integer averageDaysCount = 6;
     private Map<String, AssetOptions> assetMap;
-    private final int averageDaysCount = 6;
 
     private final BarService barService;
     private final QuoteSingletonSubscriber quoteSubscriber;
@@ -75,7 +76,12 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         return isRunning.get();
     }
 
-    public void start(Set<String> symbols) {
+    public void start(Set<String> symbols, Integer averageDaysCount, Integer fastMaBarCount, Double spread) {
+        Assert.notNull(fastMaBarCount, "Количество баров быстрой средней не указано");
+        Assert.notNull(averageDaysCount, "Количество дней средней не указано");
+        Assert.notNull(spread, "Спред не указан");
+        this.averageDaysCount = averageDaysCount;
+        this.fastMaBarCount = fastMaBarCount;
         Instant now = Instant.now();
         assetMap = symbols.stream().map(s -> barService
                 .ta4jConcurrentSeriesAsync(s, TimeFrame.TIME_FRAME_D, now.minus(Duration.ofDays(averageDaysCount - 1)),
@@ -106,7 +112,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
                             .minus(1)
                             .multipliedBy(100.0);
                     Indicator<Num> fastMaIndicator = new SMAIndicator(normalizedIndicator, fastMaBarCount);
-                    Indicator<Num> offsetIndicator = NumericIndicator.of(fastMaIndicator).minus(0.2);
+                    Indicator<Num> offsetIndicator = NumericIndicator.of(fastMaIndicator).minus(spread);
 
                     return new AssetOptions(s, barSeries, fastMaIndicator, slowMaIndicator, normalizedIndicator,
                             offsetIndicator);
