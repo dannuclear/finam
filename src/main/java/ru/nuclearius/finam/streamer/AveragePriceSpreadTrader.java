@@ -106,7 +106,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
                             .minus(1)
                             .multipliedBy(100.0);
                     Indicator<Num> fastMaIndicator = new SMAIndicator(normalizedIndicator, fastMaBarCount);
-                    Indicator<Num> offsetIndicator = NumericIndicator.of(fastMaIndicator).minus(0.1);
+                    Indicator<Num> offsetIndicator = NumericIndicator.of(fastMaIndicator).minus(0.2);
 
                     return new AssetOptions(s, barSeries, fastMaIndicator, slowMaIndicator, normalizedIndicator,
                             offsetIndicator);
