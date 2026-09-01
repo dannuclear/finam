@@ -1,4 +1,4 @@
-import { Grid, Typography } from '@mui/material'
+import { Grid } from '@mui/material'
 import type { OptimizerStrategyParameter } from '@shared/api/schema'
 import { FormDialog, type FormDialogProps } from '@shared/ui/dialog/FormDialog'
 import { FormContainer, TextFieldElement, type FieldValues } from 'react-hook-form-mui'
@@ -33,7 +33,7 @@ export const OptimizerParametersDialog = ({
                             <Grid key={param.id} size={12}>
                                 <Grid container spacing={1}>
                                     <Grid size={6} alignContent="center">
-                                        <Typography>{param.name}</Typography>
+                                        {/* <Typography>{param.name}</Typography> */}
                                     </Grid>
 
                                     <Grid size={2}>

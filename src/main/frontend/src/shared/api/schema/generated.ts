@@ -706,7 +706,7 @@ export interface components {
         };
         OptimizerStrategyParameter: {
             id?: string;
-        } & (components["schemas"]["RangeOptimizerStrategyParameter"] | components["schemas"]["ValuesOptimizerStrategyParameter"]);
+        };
         RangeOptimizerStrategyParameter: components["schemas"]["OptimizerStrategyParameter"] & {
             from?: number;
             to?: number;
@@ -1356,7 +1356,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OptimizerStrategyParameter"][];
+                "application/json": (components["schemas"]["RangeOptimizerStrategyParameter"] | components["schemas"]["ValuesOptimizerStrategyParameter"])[];
             };
         };
         responses: {

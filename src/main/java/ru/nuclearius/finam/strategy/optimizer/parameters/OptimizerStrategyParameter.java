@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
         @JsonSubTypes.Type(RangeOptimizerStrategyParameter.class),
         @JsonSubTypes.Type(ValuesOptimizerStrategyParameter.class)
 })
-@Schema(oneOf = { RangeOptimizerStrategyParameter.class, ValuesOptimizerStrategyParameter.class })
+// @Schema(oneOf = { RangeOptimizerStrategyParameter.class, ValuesOptimizerStrategyParameter.class })
 public abstract class OptimizerStrategyParameter {
     private final String id;
 

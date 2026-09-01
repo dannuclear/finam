@@ -82,7 +82,7 @@ const BacktestPage = () => {
             }, {
                 onSuccess: (data) => {
                     setOptimizerParametersOpen(false)
-                    setOptimizerParameters(old => old?.map(p => ({ id: p.id, name: p.name, ...formData?.[p.id!] })))
+                    // setOptimizerParameters(old => old?.map(p => ({ id: p.id, name: p.name, ...formData?.[p.id!] })))
                     setParameters(old => old?.map(p => ({ ...p, value: data?.parameters?.[p.id!] })))
                     setParametersOpen(true)
                 }
