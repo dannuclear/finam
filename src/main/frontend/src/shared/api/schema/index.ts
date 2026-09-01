@@ -16,13 +16,15 @@ export type TradeGroup = ApiComponents["schemas"]["TradeGroupDTO"]
 export type TradeGroupTradedAsset = ApiComponents["schemas"]["TradeGroupTradedAssetDTO"] & Partial<WithChangeStatus>
 export type TradeGroupReferenceAsset = ApiComponents["schemas"]["TradeGroupReferenceAssetDTO"] & Partial<WithChangeStatus>
 export type Asset = ApiComponents["schemas"]["Asset"]
-export type Series = ApiComponents["schemas"]["Series"]
+export type Series = ApiComponents["schemas"]["ChartBarSeries"]
 export type Analysis = ApiComponents["schemas"]["Analysis"]
 export type Strategy = ApiComponents["schemas"]["Strategy"]
 export type OrderState = ApiComponents["schemas"]["OrderState"]
 export type StrategyAsset = ApiComponents["schemas"]["StrategyAsset"] & Partial<WithChangeStatus>
 export type AnalysisAsset = ApiComponents["schemas"]["AnalysisAsset"] & Partial<WithChangeStatus>
-
+export type StrategyParameter = ApiComponents["schemas"]["StrategyParameter"]
+export type StrategyParameterWithValue = ApiComponents["schemas"]["StrategyParameter"] & { value: unknown }
+export type OptimizerStrategyParameter = ApiComponents["schemas"]["OptimizerStrategyParameter"]
 
 // export type ItemWithMeta = { meta?: Meta }
 

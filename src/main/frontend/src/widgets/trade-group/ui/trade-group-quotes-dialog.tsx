@@ -64,7 +64,7 @@ const TradeGroupQuotesDialog = ({
 
         const lastPrices = (data ?? [])
             .filter(item => enabledBars[item.id as string] ?? item.enabled ?? true)
-            .map(item => (item?.bars?.at(-1)?.close ?? 0))
+            .map(item => (item?.values?.at(-1)?.close ?? 0))
             .filter((v): v is number => v !== undefined && v !== null);
 
         const avgOffset =
@@ -82,7 +82,7 @@ const TradeGroupQuotesDialog = ({
             const preparedItem = {
                 ...item,
                 enabled,
-                bars: (item.bars ?? [])
+                bars: (item.values ?? [])
                     .filter((bar) =>
                         bar.close != null &&
                         bar.mills != null

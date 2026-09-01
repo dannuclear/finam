@@ -31,6 +31,7 @@ import ru.nuclearius.finam.client.dto.TokenDetails;
 import ru.nuclearius.finam.client.dto.TradeHistory;
 import ru.nuclearius.finam.client.dto.TransactionList;
 import ru.nuclearius.finam.db.Asset;
+import ru.nuclearius.finam.grpc.JwtTokenHolder;
 import ru.nuclearius.finam.service.BarService;
 import ru.nuclearius.finam.service.FinamService;
 import ru.nuclearius.finam.service.OrderService;
@@ -45,10 +46,13 @@ public class FinamController {
     private final BarService barService;
     private final QuoteOrderStreamer quoteStreamer;
     private final OrderService orderService;
+    private final JwtTokenHolder jwtTokenHolder;
 
     @GetMapping("token-details")
     public TokenDetails tokenDetails() {
-        return finamService.getTokenDetails();
+        TokenDetails details = finamService.getTokenDetails();
+        details.setActive(jwtTokenHolder.hasToken());
+        return details;
     }
 
     @GetMapping("accounts/{accountId}")

@@ -44,6 +44,14 @@ const router = createBrowserRouter([
         path: ROUTES.ANALYSIS_RELATIVE_SPREADS,
         lazy: () => import("@pages/analysis-relative-spreads")
       },
+      {
+        path: ROUTES.ANALYSIS_VOLATILITY,
+        lazy: () => import("@pages/analysis-volatility")
+      },
+      {
+        path: ROUTES.TRADING_SPREADS,
+        lazy: () => import("@pages/trading-spreads")
+      },
     ]
   }
 ], { basename: import.meta.env.BASE_URL })

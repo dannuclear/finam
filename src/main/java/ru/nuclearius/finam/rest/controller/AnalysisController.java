@@ -25,7 +25,7 @@ import ru.nuclearius.finam.client.dto.TradeHistory;
 import ru.nuclearius.finam.db.Analysis;
 import ru.nuclearius.finam.db.AnalysisAsset;
 import ru.nuclearius.finam.rest.dto.AnalysisDTO;
-import ru.nuclearius.finam.rest.dto.Series;
+import ru.nuclearius.finam.rest.dto.ChartBarSeriesWithTrades;
 import ru.nuclearius.finam.rest.mapper.RESTMapper;
 import ru.nuclearius.finam.service.AnalysisService;
 import ru.nuclearius.finam.service.BarService;
@@ -73,7 +73,7 @@ public class AnalysisController {
     }
 
     @GetMapping("{id:\\d+}/relative-spreads")
-    public List<Series> relativeSpreads(
+    public List<ChartBarSeriesWithTrades> relativeSpreads(
             @PathVariable Integer id,
             @RequestParam TimeFrame timeFrame,
             @RequestParam Instant startTime,
@@ -85,13 +85,13 @@ public class AnalysisController {
             @RequestParam(defaultValue = "false") Boolean withTrades) {
 
         Map<String, List<TradeHistory.Trade>> tradesGroups = withTrades
-                ? finamService.getTradesGroups("2029595", 10, startTime, endTime)
+                ? finamService.getTradesGroups("2029595", 100, startTime, endTime)
                 : Collections.emptyMap();
 
         var futures = analysisService.assets(id).stream().map(aAsset -> barService
                 .barsWithDescriptiveStatisticsAsync(aAsset.getAsset().getSymbol(), averageTimeFrame, averageStartTime,
                         averageEndTime)
-                .thenApply(bds -> restMapper.toDto(
+                .thenApply(bds -> restMapper.map(
                         aAsset,
                         barService.bars(aAsset.getAsset().getSymbol(), timeFrame, startTime, endTime)
                                 .stream()
@@ -116,4 +116,5 @@ public class AnalysisController {
                 .toList();
         return futures.stream().map(CompletableFuture::join).toList();
     }
+
 }

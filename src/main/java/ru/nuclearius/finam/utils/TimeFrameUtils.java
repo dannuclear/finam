@@ -16,8 +16,21 @@ public class TimeFrameUtils {
 
         long requestedDays = Duration.between(startTime, endTime).toDays();
 
-        long maxDays = switch (timeFrame) {
+        long maxDays = getDepthDays(timeFrame);
+
+        if (requestedDays > maxDays) {
+            throw new IllegalArgumentException("Недопустимый период для таймфрейма " + timeFrame);
+        }
+    }
+
+    public static long getDepthDays(TimeFrame timeFrame) {
+        if (timeFrame == null || timeFrame == TimeFrame.TIME_FRAME_UNSPECIFIED) {
+            throw new IllegalArgumentException("TimeFrame is not specified");
+        }
+
+        return switch (timeFrame) {
             case TIME_FRAME_M1 -> 7;
+
             case TIME_FRAME_M5,
                     TIME_FRAME_M15,
                     TIME_FRAME_M30,
@@ -26,16 +39,16 @@ public class TimeFrameUtils {
                     TIME_FRAME_H4,
                     TIME_FRAME_H8 ->
                 30;
+
             case TIME_FRAME_D -> 365;
+
             case TIME_FRAME_W,
                     TIME_FRAME_MN,
                     TIME_FRAME_QR ->
                 365 * 5L;
-            default -> throw new IllegalArgumentException("Unsupported timeframe");
-        };
 
-        if (requestedDays > maxDays) {
-            throw new IllegalArgumentException("Недопустимый период для таймфрейма " + timeFrame);
-        }
+            default -> throw new IllegalArgumentException(
+                    "Unsupported timeframe: " + timeFrame);
+        };
     }
 }

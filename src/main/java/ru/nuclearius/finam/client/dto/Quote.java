@@ -38,4 +38,9 @@ public class Quote {
     public long mills() {
         return timestamp.toEpochMilli();
     }
+
+    @JsonProperty
+    public long seconds() {
+        return timestamp.getEpochSecond();
+    }
 }

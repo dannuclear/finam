@@ -10,11 +10,5 @@ import lombok.Setter;
 @Setter
 @Builder
 public class BacktestResult {
-    private List<Series> series;
-
-    private BacktestStats stats;
-
-    public static class BacktestStats {
-
-    }
+    private List<ChartBacktestSeries> series;
 }

@@ -137,6 +137,13 @@ public interface ProtobufStandardMappings {
         return new BigDecimal(f.getValue());
     }
 
+    default Decimal map(BigDecimal f) {
+        if (f == null) {
+            return null;
+        }
+        return Decimal.newBuilder().setValue(f.toPlainString()).build();
+    }
+
     default Instant mapToInstant(Timestamp t) {
         if (t == null || Timestamp.getDefaultInstance().equals(t)) {
             return null;

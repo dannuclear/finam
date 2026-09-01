@@ -13,9 +13,9 @@ public class AsyncConfig {
     @Bean
     TaskExecutor barsExecutor() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(3);
+        taskExecutor.setCorePoolSize(6);
         taskExecutor.setMaxPoolSize(10);
-        taskExecutor.setQueueCapacity(100);
+        taskExecutor.setQueueCapacity(60000);
         taskExecutor.setThreadNamePrefix("bars-");
         taskExecutor.initialize();
         return taskExecutor;

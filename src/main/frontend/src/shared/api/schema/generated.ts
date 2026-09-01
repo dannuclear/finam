@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategies/{id}/optimize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["optimize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/strategies/{id}/backtest": {
         parameters: {
             query?: never;
@@ -126,6 +142,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["backtest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spreads/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spreads/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -212,6 +260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/strategies/{id}/parameters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["strategyParameters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/strategies/{id}/assets": {
         parameters: {
             query?: never;
@@ -220,6 +284,55 @@ export interface paths {
             cookie?: never;
         };
         get: operations["assets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spreads/symbols": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["symbols"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spreads/subcribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscribe to quotes via SSE */
+        get: operations["subscribe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spreads/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status"];
         put?: never;
         post?: never;
         delete?: never;
@@ -591,12 +704,27 @@ export interface components {
             /** Format: int32 */
             averageDays?: number;
         };
-        BacktestResult: {
-            series?: components["schemas"]["Series"][];
-            stats?: components["schemas"]["BacktestStats"];
+        OptimizerStrategyParameter: {
+            id?: string;
+        } & (components["schemas"]["RangeOptimizerStrategyParameter"] | components["schemas"]["ValuesOptimizerStrategyParameter"]);
+        RangeOptimizerStrategyParameter: components["schemas"]["OptimizerStrategyParameter"] & {
+            from?: number;
+            to?: number;
+            step?: number;
         };
-        BacktestStats: unknown;
-        Series: {
+        ValuesOptimizerStrategyParameter: components["schemas"]["OptimizerStrategyParameter"] & {
+            options?: string[];
+        };
+        OptimizationResult: {
+            parameters?: {
+                [key: string]: string;
+            };
+            value?: number;
+        };
+        BacktestResult: {
+            series?: components["schemas"]["ChartBacktestSeries"][];
+        };
+        ChartBacktestSeries: {
             id?: string;
             lineColor?: string;
             /** Format: int32 */
@@ -605,29 +733,46 @@ export interface components {
             enabled?: boolean;
             /** Format: int32 */
             panelNum?: number;
-            bars?: components["schemas"]["Bar"][];
-            trades?: components["schemas"]["Trade"][];
-            extraParams?: {
+            values?: components["schemas"]["Bar"][];
+            indicators?: components["schemas"]["ChartIndicatorSeries"][];
+            trades?: components["schemas"]["ChartSeriesMarker"][];
+            statistics?: {
                 [key: string]: unknown;
             };
+            normalDistribution?: components["schemas"]["Point"][];
         };
-        Trade: {
-            tradeId: string;
-            symbol: string;
-            price?: number;
-            size?: number;
-            /** @enum {string} */
-            side?: "SIDE_UNSPECIFIED" | "SIDE_BUY" | "SIDE_SELL" | "UNRECOGNIZED";
+        ChartIndicatorSeries: {
+            id?: string;
+            lineColor?: string;
+            /** Format: int32 */
+            lineWidth?: number;
+            name?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            panelNum?: number;
+            values?: components["schemas"]["ChartIndicatorValue"][];
+        };
+        ChartIndicatorValue: {
             /** Format: date-time */
             timestamp?: string;
-            orderId?: string;
-            accountId?: string;
-            comment?: string;
+            value?: number;
             /** Format: int64 */
             seconds?: number;
+        };
+        ChartSeriesMarker: {
+            /** Format: date-time */
+            timestamp?: string;
+            /** @enum {string} */
+            action?: "BUY" | "SELL";
+            price?: number;
             /** Format: int64 */
-            mills?: number;
-            sum?: number;
+            seconds?: number;
+        };
+        Point: {
+            /** Format: double */
+            x?: number;
+            /** Format: double */
+            y?: number;
         };
         PageMetadata: {
             /** Format: int64 */
@@ -666,9 +811,29 @@ export interface components {
             /** Format: int32 */
             panelNum?: number;
         };
+        ChartBarSeries: {
+            id?: string;
+            lineColor?: string;
+            /** Format: int32 */
+            lineWidth?: number;
+            name?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            panelNum?: number;
+            values?: components["schemas"]["Bar"][];
+        };
         PagedModelStrategy: {
             content?: components["schemas"]["Strategy"][];
             page?: components["schemas"]["PageMetadata"];
+        };
+        StrategyParameter: {
+            id?: string;
+            name?: string;
+            /** @enum {string} */
+            type?: "INTEGER" | "DOUBLE" | "STRING" | "ENUM";
+            options?: {
+                [key: string]: string;
+            };
         };
         StrategyAsset: {
             /** Format: int32 */
@@ -732,6 +897,7 @@ export interface components {
             mdPermissions?: components["schemas"]["MDPermission"][];
             accountIds?: string[];
             readonly?: boolean;
+            active?: boolean;
         };
         PagedModelAsset: {
             content?: components["schemas"]["Asset"][];
@@ -803,12 +969,42 @@ export interface components {
             /** Format: int32 */
             nanos?: number;
         };
+        Trade: {
+            tradeId: string;
+            symbol: string;
+            price?: number;
+            size?: number;
+            /** @enum {string} */
+            side?: "SIDE_UNSPECIFIED" | "SIDE_BUY" | "SIDE_SELL" | "UNRECOGNIZED";
+            /** Format: date-time */
+            timestamp?: string;
+            orderId?: string;
+            accountId?: string;
+            comment?: string;
+            /** Format: int64 */
+            seconds?: number;
+            /** Format: int64 */
+            mills?: number;
+            sum?: number;
+        };
         TradeHistory: {
             trades?: components["schemas"]["Trade"][];
         };
         PagedModelAnalysis: {
             content?: components["schemas"]["Analysis"][];
             page?: components["schemas"]["PageMetadata"];
+        };
+        ChartBarSeriesWithTrades: {
+            id?: string;
+            lineColor?: string;
+            /** Format: int32 */
+            lineWidth?: number;
+            name?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            panelNum?: number;
+            values?: components["schemas"]["Bar"][];
+            trades?: components["schemas"]["Trade"][];
         };
         AnalysisAsset: {
             /** Format: int32 */
@@ -1143,12 +1339,14 @@ export interface operations {
             };
         };
     };
-    backtest: {
+    optimize: {
         parameters: {
             query: {
+                assetId: string;
                 timeFrame: "TIME_FRAME_UNSPECIFIED" | "TIME_FRAME_M1" | "TIME_FRAME_M5" | "TIME_FRAME_M15" | "TIME_FRAME_M30" | "TIME_FRAME_H1" | "TIME_FRAME_H2" | "TIME_FRAME_H4" | "TIME_FRAME_H8" | "TIME_FRAME_D" | "TIME_FRAME_W" | "TIME_FRAME_MN" | "TIME_FRAME_QR" | "UNRECOGNIZED";
                 startTime: string;
                 endTime: string;
+                transactionCost: number;
             };
             header?: never;
             path: {
@@ -1156,7 +1354,46 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OptimizerStrategyParameter"][];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OptimizationResult"];
+                };
+            };
+        };
+    };
+    backtest: {
+        parameters: {
+            query: {
+                assets: string[];
+                timeFrame: "TIME_FRAME_UNSPECIFIED" | "TIME_FRAME_M1" | "TIME_FRAME_M5" | "TIME_FRAME_M15" | "TIME_FRAME_M30" | "TIME_FRAME_H1" | "TIME_FRAME_H2" | "TIME_FRAME_H4" | "TIME_FRAME_H8" | "TIME_FRAME_D" | "TIME_FRAME_W" | "TIME_FRAME_MN" | "TIME_FRAME_QR" | "UNRECOGNIZED";
+                startTime: string;
+                endTime: string;
+                transactionCost: number;
+                distributionMa: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: string;
+                };
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -1166,6 +1403,42 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["BacktestResult"];
                 };
+            };
+        };
+    };
+    stop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1309,7 +1582,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["Series"][];
+                    "*/*": components["schemas"]["ChartBarSeries"][];
+                };
+            };
+        };
+    };
+    strategyParameters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StrategyParameter"][];
                 };
             };
         };
@@ -1332,6 +1627,66 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["StrategyAsset"][];
+                };
+            };
+        };
+    };
+    symbols: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string[];
+                };
+            };
+        };
+    };
+    subscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SSE stream of quotes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": boolean;
                 };
             };
         };
@@ -1601,7 +1956,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["Series"][];
+                    "*/*": components["schemas"]["ChartBarSeriesWithTrades"][];
                 };
             };
         };

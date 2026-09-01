@@ -65,6 +65,26 @@ const items: MainMenuItem[] = [
                 navigate: ROUTES.ANALYSIS_RELATIVE_SPREADS,
                 roles: [],
             },
+            {
+                label: 'Волатильность',
+                icon: 'fa-chart-line-up-down',
+                navigate: ROUTES.ANALYSIS_VOLATILITY,
+                roles: [],
+            },
+        ]
+    },
+    {
+        label: 'Торговля',
+        icon: 'fa-display-chart-up-circle-dollar',
+        redirect: "#",
+        roles: [],
+        items: [
+            {
+                label: 'Спреды',
+                icon: 'fa-arrows-from-dotted-line',
+                navigate: ROUTES.TRADING_SPREADS,
+                roles: [],
+            },
         ]
     },
 ]

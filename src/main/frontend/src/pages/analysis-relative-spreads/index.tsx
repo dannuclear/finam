@@ -64,7 +64,7 @@ const Index = () => {
             const preparedItem = {
                 ...item,
                 enabled,
-                bars: (item.bars ?? [])
+                bars: (item.values ?? [])
                     .filter((bar) =>
                         bar.close != null &&
                         bar.seconds != null

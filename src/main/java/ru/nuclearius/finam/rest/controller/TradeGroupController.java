@@ -3,8 +3,8 @@ package ru.nuclearius.finam.rest.controller;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -32,17 +32,13 @@ import ru.nuclearius.finam.db.Asset;
 import ru.nuclearius.finam.db.TradeGroup;
 import ru.nuclearius.finam.db.TradeGroupReferenceAsset;
 import ru.nuclearius.finam.db.TradeGroupTradedAsset;
-import ru.nuclearius.finam.manager.SubscriptionManager;
 import ru.nuclearius.finam.repository.TradeGroupReferenceAssetRepository;
-import ru.nuclearius.finam.rest.dto.Series;
+import ru.nuclearius.finam.rest.dto.ChartBarSeries;
 import ru.nuclearius.finam.rest.dto.TradeGroupDTO;
 import ru.nuclearius.finam.rest.mapper.RESTMapper;
 import ru.nuclearius.finam.service.BarService;
-import ru.nuclearius.finam.service.FinamService;
 import ru.nuclearius.finam.service.TradeGroupService;
 import ru.nuclearius.finam.service.mapper.EntityMapper;
-import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriber;
-import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriberFactory;
 
 @RestController
 @RequestMapping("api/v1/trade-groups")
@@ -50,8 +46,8 @@ import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriberFactory;
 public class TradeGroupController {
     private final TradeGroupService tradeGroupService;
     private final EntityMapper entityMapper;
-    private final SubscriptionManager subscriptionManager;
-    private final QuoteSubscriberFactory quoteSubscriberFactory;
+    // private final SubscriptionManager subscriptionManager;
+    // private final QuoteSubscriberFactory quoteSubscriberFactory;
     private final BarService barService;
     private final RESTMapper restMapper;
 
@@ -61,8 +57,7 @@ public class TradeGroupController {
     public Page<TradeGroup> all(
             @RequestParam(required = false) String q,
             @ParameterObject Pageable pageable) {
-        return tradeGroupService.findAll(q, pageable)
-                .map(tg -> tg.withActive(subscriptionManager.isRunning(tradeGroupKey(tg.getId()))));
+        return tradeGroupService.findAll(q, pageable);
     }
 
     @GetMapping("{id:\\d+}")
@@ -106,15 +101,15 @@ public class TradeGroupController {
                 .map(Asset::getSymbol).collect(Collectors.toSet());
 
         String tradeGroupKey = tradeGroupKey(id);
-        if (subscriptionManager.isRunning(tradeGroupKey)) {
-            subscriptionManager.stop(tradeGroupKey);
-        } else {
-            QuoteSubscriber quoteSubscriber = quoteSubscriberFactory.create((quote) -> {
-                System.out.println(quote);
-            }, () -> symbols);
-            subscriptionManager.register(tradeGroupKey, quoteSubscriber);
-            quoteSubscriber.start();
-        }
+        // if (subscriptionManager.isRunning(tradeGroupKey)) {
+        //     subscriptionManager.stop(tradeGroupKey);
+        // } else {
+            // QuoteSubscriber quoteSubscriber = quoteSubscriberFactory.create((quote) -> {
+            // System.out.println(quote);
+            // }, () -> symbols);
+            // subscriptionManager.register(tradeGroupKey, quoteSubscriber);
+            // quoteSubscriber.start();
+        // }
         return true;
     }
 
@@ -154,25 +149,13 @@ public class TradeGroupController {
     }
 
     @GetMapping("{id:\\d+}/reference-assets/bars")
-    public List<Series> referenceAssetsBars(@PathVariable Integer id,
+    public List<ChartBarSeries> referenceAssetsBars(@PathVariable Integer id,
             @RequestParam TimeFrame timeFrame,
             @RequestParam OffsetDateTime startTime,
             @RequestParam OffsetDateTime endTime,
             @RequestParam(defaultValue = "30", required = false) Integer smaBarCount) {
 
-        List<CompletableFuture<Series>> futures = tradeGroupService.referenceAssetsByGroupId(id)
-                .stream()
-                .map(tGAsset -> {
-                    var symbol = tGAsset.getAsset().getSymbol();
-                    return barService.barsAsync(
-                            symbol,
-                            timeFrame,
-                            startTime.toInstant(),
-                            endTime.toInstant()).thenApply(bars -> {
-                                return restMapper.toDto(tGAsset, bars, Map.of("priceOffset", tGAsset.getPriceOffset()));
-                            });
-                }).toList();
-        return futures.stream().map(CompletableFuture::join).toList();
+        return Collections.emptyList();
     }
 
     private String tradeGroupKey(Integer id) {

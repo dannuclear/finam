@@ -5,12 +5,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtTokenHolder {
     private final AtomicReference<String> token = new AtomicReference<>();
     private volatile CompletableFuture<String> tokenFuture = new CompletableFuture<>();
+
+    public boolean hasToken() {
+        return StringUtils.isNoneEmpty(token.get());
+    }
 
     public CompletableFuture<String> awaitToken(Duration timeout) {
 

@@ -1,6 +1,7 @@
 package ru.nuclearius.finam.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import ru.nuclearius.finam.db.Asset;
 public interface AssetRepository extends JpaRepository<Asset, String> {
 
     List<Asset> findAllBySymbolIn(Iterable<String> symbols);
+    Optional<Asset> findBySymbol(String symbols);
 
     @Query("""
                 SELECT a

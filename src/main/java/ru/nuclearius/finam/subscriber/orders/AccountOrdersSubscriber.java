@@ -36,7 +36,7 @@ public class AccountOrdersSubscriber extends AbstractBackoffObserver<SubscribeOr
     @Override
     public void onNext(SubscribeOrdersResponse response) {
         response.getOrdersList().stream()
-                .map(protoMapper::toDomain)
+                .map(protoMapper::map)
                 .forEach(this::sendForEachListener);
     }
 

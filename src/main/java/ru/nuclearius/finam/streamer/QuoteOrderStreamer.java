@@ -10,16 +10,26 @@ import lombok.extern.slf4j.Slf4j;
 import ru.nuclearius.finam.client.dto.Quote;
 import ru.nuclearius.finam.service.domain.OrderState;
 import ru.nuclearius.finam.subscriber.orders.AccountOrdersSubscriber.OrderListener;
-import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriber.QuoteListener;
-import ru.nuclearius.finam.subscriber.quotes.QuoteSubscriber.SymbolsProvider;
+import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber;
+import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber.QuoteListener;
 
 @Slf4j
 @Component
 public class QuoteOrderStreamer extends HeartbeatSseEmitterRegistry
-        implements QuoteListener, OrderListener, SymbolsProvider {
+        implements QuoteListener, OrderListener {
 
     private static final String QUOTE_EVENT_NAME = "quote";
     private static final String ORDER_EVENT_NAME = "order";
+
+    public QuoteOrderStreamer(QuoteSingletonSubscriber quoteSubscriber) {
+        this.setAssetsChangeListener(symbols -> {
+            if (symbols != null && symbols.size() > 0)
+                quoteSubscriber.addListener(symbols, this);
+            else {
+                quoteSubscriber.removeListener(this);
+            }
+        });
+    }
 
     @Override
     public void onQuote(Quote quote) {
@@ -30,7 +40,6 @@ public class QuoteOrderStreamer extends HeartbeatSseEmitterRegistry
                 .data(quote)
                 .build();
         send(quote.getSymbol(), event);
-
     }
 
     @Override

@@ -59,7 +59,7 @@ const QuoteChartDialog = ({
                 //    console.log('Last data: ' + dayjs(lastBar.mills).locale('ru').format("DD.MM.YYYY HH:mm:ss"));
                 // }
 
-                // console.log('New data: ' + dayjs(quote.mills).locale('ru').format("DD.MM.YYYY HH:mm:ss"));
+                console.log('New data: ' + dayjs(quote.mills).locale('ru').format("DD.MM.YYYY HH:mm:ss"));
                 const time = roundToInterval(quote.mills, timeFrameRef.current.intervalSec, timeFrameRef.current.offset ?? 0)
                 // console.log('Rounded: ' + quote.mills + '/' + timeFrameRef.current.intervalSec + ' result: ' + dayjs(time).locale('ru').format("DD.MM.YYYY HH:mm:ss"));
 

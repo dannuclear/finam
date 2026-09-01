@@ -13,6 +13,7 @@ public class TokenDetails {
     private List<String> accountIds;
 
     private boolean readonly;
+    private boolean isActive;
 
     @Data
     public static class MDPermission {
