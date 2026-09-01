@@ -78,9 +78,11 @@ public class FinamService {
     public TokenDetails getTokenDetails() {
         if (!jwtTokenHolder.hasToken())
             return null;
-        TokenDetailsResponse response = authServiceBlockingStub.tokenDetails(TokenDetailsRequest.newBuilder()
-                .setToken(jwtTokenHolder.getToken())
-                .build());
+        TokenDetailsResponse response = authServiceBlockingStub
+                .withDeadlineAfter(3, TimeUnit.SECONDS)
+                .tokenDetails(TokenDetailsRequest.newBuilder()
+                        .setToken(jwtTokenHolder.getToken())
+                        .build());
         return protoMapper.toDomain(response);
     }
 
@@ -92,9 +94,11 @@ public class FinamService {
      */
     public Account getAccount(String accountId) {
         Assert.hasText(accountId, "Account id must be present");
-        GetAccountResponse response = grpcAccountsService.getAccount(GetAccountRequest.newBuilder()
-                .setAccountId(accountId)
-                .build());
+        GetAccountResponse response = grpcAccountsService
+                .withDeadlineAfter(3, TimeUnit.SECONDS)
+                .getAccount(GetAccountRequest.newBuilder()
+                        .setAccountId(accountId)
+                        .build());
         return protoMapper.toDomain(response);
     }
 
@@ -118,7 +122,9 @@ public class FinamService {
                 .setInterval(DateUtils.toInterval(startTime, endTime))
                 .setLimit(limit)
                 .build();
-        TradesResponse response = grpcAccountsService.trades(request);
+        TradesResponse response = grpcAccountsService
+                .withDeadlineAfter(3, TimeUnit.SECONDS)
+                .trades(request);
         return protoMapper.toDomain(response);
     }
 

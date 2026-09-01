@@ -33,8 +33,6 @@ public class StartupInitializer {
 
     private final QuoteOrderStreamer quoteOrderStreamer;
 
-    private final AveragePriceSpreadTrader pairSpreadTrader;
-
     private final OrderService orderService;
 
     @EventListener(ApplicationReadyEvent.class)

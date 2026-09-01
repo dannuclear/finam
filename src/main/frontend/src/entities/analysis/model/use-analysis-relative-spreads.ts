@@ -41,6 +41,7 @@ export const useAnalysisRelativeSpreads = ({
         }
     }, {
         enabled: analysisId != null,
-        refetchOnWindowFocus: false
+        refetchOnWindowFocus: false,
+        retry: false
     })
 }

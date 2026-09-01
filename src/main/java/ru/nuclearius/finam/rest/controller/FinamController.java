@@ -51,7 +51,8 @@ public class FinamController {
     @GetMapping("token-details")
     public TokenDetails tokenDetails() {
         TokenDetails details = finamService.getTokenDetails();
-        details.setActive(jwtTokenHolder.hasToken());
+        if (details != null)
+            details.setActive(jwtTokenHolder.hasToken());
         return details;
     }
 
