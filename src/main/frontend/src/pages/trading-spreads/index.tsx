@@ -1,10 +1,11 @@
 import { AssetSelect } from "@features/asset/ui/asset-select"
 import { useTradingSpreadsStart, useTradingSpreadsStatus, useTradingSpreadsStop, useTradingSpreadsSymbols } from "@features/trading-spreads"
-import { Button, TextField } from "@mui/material"
+import { Button, FormControlLabel, Switch, TextField } from "@mui/material"
 import Grid from "@mui/material/Grid"
 import type { Asset } from "@shared/api/schema"
 import { TIMEFRAMES, type TimeFrameConfig } from "@shared/model/timeframes"
 import { BarChart } from "@shared/ui"
+import Legend from "@widgets/chart/ui/legend"
 import { LineSeries, Pane, type SeriesApiRef } from "lightweight-charts-react-components"
 import { useEffect, useRef, useState } from "react"
 
@@ -12,8 +13,16 @@ const defaultAssets: Asset[] = [
     { name: "ОФЗ 26248", symbol: "SU26248RMFS3@MISX" },
     { name: "ОФЗ 26254", symbol: "SU26254RMFS1@MISX" },
     { name: "ОФЗ 26238", symbol: "SU26238RMFS4@MISX" },
-    { name: "ОФЗ 26253", symbol: "SU26253RMFS3@MISX" }
+    { name: "ОФЗ 26253", symbol: "SU26253RMFS3@MISX" },
+    { name: "ОФЗ 26247", symbol: "SU26247RMFS5@MISX" },
+    { name: "ОФЗ 26230", symbol: "SU26230RMFS1@MISX" },
+    { name: "ОФЗ 26245", symbol: "SU26245RMFS9@MISX" },
 ]
+
+const generateColor = (index: number): string => {
+    const hue = (index * 137.508) % 360;
+    return `hsl(${hue}, 70%, 55%)`;
+};
 
 const AssetListPage = () => {
     const [timeFrame, setTimeFrame] = useState<TimeFrameConfig>(TIMEFRAMES[0]);
@@ -31,19 +40,34 @@ const AssetListPage = () => {
     const [fastMaCount, setFastMaCount] = useState<number>(4)
     const [daysCount, setDaysCount] = useState<number>(6)
     const [spread, setSpread] = useState<number>(0.2)
+    const [showPrice, setShowPrice] = useState<boolean>(false)
+
+    const [seriesColors, setSeriesColors] = useState<Record<string, string>>({});
 
     const startInternal = () => {
-        if (assets)
-            start({
-                params: {
-                    query: {
-                        assets: assets?.map(a => a.symbol ?? ""),
-                        fastMaCount: fastMaCount,
-                        daysCount: daysCount,
-                        spread: spread
-                    }
+        if (!assets) {
+            return;
+        }
+
+        const colors: Record<string, string> = {};
+
+        assets.forEach((asset, index) => {
+            const symbol = asset.symbol ?? "";
+            colors[symbol] = generateColor(index);
+        });
+
+        setSeriesColors(colors);
+
+        start({
+            params: {
+                query: {
+                    assets: assets?.map(a => a.symbol ?? ""),
+                    fastMaCount: fastMaCount,
+                    daysCount: daysCount,
+                    spread: spread
                 }
-            })
+            }
+        })
     }
 
     useEffect(() => {
@@ -114,6 +138,17 @@ const AssetListPage = () => {
 
     }, [isRunning])
 
+    const legendOptions = assets?.map(item => {
+        const id = item.symbol ?? "";
+
+        return {
+            id,
+            label: item.name ?? "no-name",
+            color: seriesColors[id] ?? "rgba(0, 0, 0, 0)",
+            enabled: true
+        };
+    }) ?? [];
+
     return (
         <Grid container spacing={1}>
             <Grid size={12}>
@@ -140,6 +175,13 @@ const AssetListPage = () => {
                     value={spread}
                     onChange={e => setSpread(Number(e.target.value))} />
             </Grid>
+            <Grid size={1} textAlign="center">
+                <FormControlLabel control={<Switch
+                    title="Цены"
+                    value={showPrice}
+                    onChange={e => setShowPrice(e.target.checked)} />} label="Цены" />
+
+            </Grid>
             <Grid size={6} container spacing={1}>
                 <Button onClick={() => startInternal()} disabled={isRunning} loading={isStartPending}>Start</Button>
                 <Button onClick={() => stop({})} disabled={!isRunning} loading={isStopPending}>Stop</Button>
@@ -150,13 +192,17 @@ const AssetListPage = () => {
                     onTimeFrameChange={(tf) => {
                         setTimeFrame(tf);
                     }}
+                    legend={
+                        <Legend
+                            options={legendOptions}
+                        />}
                 >
                     <Pane stretchFactor={2}>
-                        {data?.map(symbol =>
+                        {showPrice && data?.map(symbol =>
                             <LineSeries
                                 key={symbol}
                                 data={[]}
-                                options={{ lineWidth: 1, color: "#9ccaff" }}
+                                options={{ lineWidth: 1, color: seriesColors[symbol] ?? "#9ccaff" }}
                                 ref={(ref) => {
                                     if (ref) {
                                         seriesRefs.current.set(symbol, ref)
@@ -172,7 +218,7 @@ const AssetListPage = () => {
                             <LineSeries
                                 key={`${symbol}-fast-ma`}
                                 data={[]}
-                                options={{ lineWidth: 1, color: "#22f00f" }}
+                                options={{ lineWidth: 1, color: seriesColors[symbol] ?? "#9ccaff" }}
                                 ref={(ref) => {
                                     if (ref) {
                                         seriesRefs.current.set(`${symbol}-fast-ma`, ref)
