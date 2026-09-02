@@ -6,8 +6,24 @@ import type { Asset } from "@shared/api/schema"
 import { TIMEFRAMES, type TimeFrameConfig } from "@shared/model/timeframes"
 import { BarChart } from "@shared/ui"
 import Legend from "@widgets/chart/ui/legend"
+import { LineStyle } from "lightweight-charts"
 import { LineSeries, Pane, type SeriesApiRef } from "lightweight-charts-react-components"
 import { useEffect, useRef, useState } from "react"
+
+const SERIES_COLORS = [
+    "#1565C0", // blue
+    "#C62828", // red
+    "#2E7D32", // green
+    "#6A1B9A", // purple
+    "#E65100", // orange
+    "#00838F", // cyan
+    "#AD1457", // pink
+    "#4E342E", // brown
+    "#283593", // indigo
+    "#558B2F", // lime-green
+    "#4527A0", // deep-purple
+    "#00695C", // teal
+];
 
 const defaultAssets: Asset[] = [
     { name: "ОФЗ 26248", symbol: "SU26248RMFS3@MISX" },
@@ -20,8 +36,7 @@ const defaultAssets: Asset[] = [
 ]
 
 const generateColor = (index: number): string => {
-    const hue = (index * 137.508) % 360;
-    return `hsl(${hue}, 70%, 55%)`;
+    return SERIES_COLORS[index % SERIES_COLORS.length];
 };
 
 const AssetListPage = () => {
@@ -196,13 +211,19 @@ const AssetListPage = () => {
                         <Legend
                             options={legendOptions}
                         />}
+                    showTimeframes={false}
                 >
                     <Pane stretchFactor={2}>
                         {showPrice && data?.map(symbol =>
                             <LineSeries
                                 key={symbol}
                                 data={[]}
-                                options={{ lineWidth: 1, color: seriesColors[symbol] ?? "#9ccaff" }}
+                                options={{
+                                    lineWidth: 1,
+                                    color: seriesColors[symbol] ?? "#9ccaff",
+                                    priceLineVisible: false,
+                                    lastValueVisible: false
+                                }}
                                 ref={(ref) => {
                                     if (ref) {
                                         seriesRefs.current.set(symbol, ref)
@@ -218,7 +239,13 @@ const AssetListPage = () => {
                             <LineSeries
                                 key={`${symbol}-fast-ma`}
                                 data={[]}
-                                options={{ lineWidth: 1, color: seriesColors[symbol] ?? "#9ccaff" }}
+                                options={{
+                                    lineWidth: 1,
+                                    lineStyle: LineStyle.Dotted,
+                                    color: seriesColors[symbol] ?? "#9ccaff",
+                                    priceLineVisible: false,
+                                    lastValueVisible: false,
+                                }}
                                 ref={(ref) => {
                                     if (ref) {
                                         seriesRefs.current.set(`${symbol}-fast-ma`, ref)
@@ -233,7 +260,12 @@ const AssetListPage = () => {
                             <LineSeries
                                 key={`${symbol}-offset`}
                                 data={[]}
-                                options={{ lineWidth: 1, color: "#f70d0d" }}
+                                options={{
+                                    lineWidth: 1,
+                                    color: seriesColors[symbol] ?? "#9ccaff",
+                                    priceLineVisible: false,
+                                    lastValueVisible: false,
+                                }}
                                 ref={(ref) => {
                                     if (ref) {
                                         seriesRefs.current.set(`${symbol}-offset`, ref)
