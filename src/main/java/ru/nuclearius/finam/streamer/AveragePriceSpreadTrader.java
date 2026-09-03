@@ -28,6 +28,7 @@ import org.ta4j.core.bars.TimeBarBuilderFactory;
 import org.ta4j.core.indicators.CachedIndicator;
 import org.ta4j.core.indicators.averages.SMAIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
+import org.ta4j.core.indicators.helpers.PreviousValueIndicator;
 import org.ta4j.core.indicators.numeric.NumericIndicator;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.rules.JustOnceRule;
@@ -84,8 +85,8 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         this.fastMaBarCount = fastMaBarCount;
         Instant now = Instant.now();
         assetMap = symbols.stream().map(s -> barService
-                .ta4jConcurrentSeriesAsync(s, TimeFrame.TIME_FRAME_D, now.minus(Duration.ofDays(averageDaysCount - 1)),
-                        now)
+                .ta4jConcurrentSeriesAsync(s, TimeFrame.TIME_FRAME_D, now.minus(Duration.ofDays(averageDaysCount)),
+                        now.minus(Duration.ofDays(1)))
                 .thenApply(averageBarSeries -> {
                     averageBarSeries.setMaximumBarCount(averageDaysCount);
                     ClosePriceIndicator averageClosePriceIndicator = new ClosePriceIndicator(averageBarSeries);
@@ -94,7 +95,6 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
                             .withName(s + "-live-series")
                             .withBarBuilderFactory(new TimeBarBuilderFactory(Duration.ofMinutes(1), true))
                             .build();
-
                     Indicator<Num> normalizedIndicator = NumericIndicator.closePrice(barSeries)
                             .dividedBy(new CachedIndicator<Num>(barSeries) {
 
@@ -128,7 +128,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
 
                                     return new JustOnceRule(
                                             new UnderIndicatorRule(first.getValue().fastMaIndicator(),
-                                                    new LastValueIndicator(second.getValue().offsetIndicator())) {
+                                                    new LastValueIndicator(second.getValue().offsetIndicator(), 1)) {
                                                 @Override
                                                 public boolean isSatisfied(int index, TradingRecord tradingRecord) {
                                                     if (index < fastMaBarCount)
@@ -161,14 +161,14 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         AssetOptions option = assetMap.get(symbol);
         ConcurrentBarSeries series = option.barSeries();
 
-        series.ingestTrade(quote.getTimestamp(), quote.getLastSize(), quote.getLast());
-
-        Bar lastBar = series.getLastBar();
+        if (series.getEndIndex() == -1 || !quote.getTimestamp().isBefore(series.getLastBar().getBeginTime()))
+            series.ingestTrade(quote.getTimestamp(), quote.getLastSize(), quote.getLast());
 
         BigDecimal normalizedValue = getIndicatorLastValue(option.normalizedIndicator());
         BigDecimal fastMaValue = getIndicatorLastValue(option.fastMaIndicator());
         BigDecimal offsetValue = getIndicatorLastValue(option.offsetIndicator());
 
+        Bar lastBar = series.getLastBar();
         if (!orderService.hasChains()) {
             rules.get(symbol).entrySet().forEach(entry -> {
                 if (entry.getValue().isSatisfied(series.getEndIndex())) {
@@ -218,8 +218,9 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         BigDecimal amount = sellPosition.getCurrentPrice()
                 .multiply(sellPosition.getQuantity());
 
+        BigDecimal targetPrice = targetBar.getClosePrice().bigDecimalValue();
         BigDecimal buyQuantity = amount.divide(
-                targetBar.getClosePrice().bigDecimalValue(),
+                targetPrice,
                 0,
                 RoundingMode.DOWN);
 

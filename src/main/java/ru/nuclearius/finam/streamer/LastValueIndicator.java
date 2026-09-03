@@ -7,15 +7,17 @@ import org.ta4j.core.num.Num;
 public class LastValueIndicator implements Indicator<Num> {
 
     private final Indicator<Num> source;
+    private final int offset;
 
-    public LastValueIndicator(Indicator<Num> source) {
+    public LastValueIndicator(Indicator<Num> source, int offset) {
         this.source = source;
+        this.offset = offset;
     }
 
     @Override
     public Num getValue(int index) {
         BarSeries series = source.getBarSeries();
-        return source.getValue(series.getEndIndex());
+        return source.getValue(series.getEndIndex() - offset);
     }
 
     @Override
