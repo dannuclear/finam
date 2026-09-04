@@ -52,9 +52,9 @@ const AssetListPage = () => {
     const { data: isRunning } = useTradingSpreadsStatus()
 
     const [assets, setAssets] = useState<Asset[]>(defaultAssets)
-    const [fastMaCount, setFastMaCount] = useState<number>(4)
+    const [fastMaCount, setFastMaCount] = useState<number>(5)
     const [daysCount, setDaysCount] = useState<number>(6)
-    const [spread, setSpread] = useState<number>(0.2)
+    const [spread, setSpread] = useState<number>(0.24)
     const [showPrice, setShowPrice] = useState<boolean>(false)
 
     const [seriesColors, setSeriesColors] = useState<Record<string, string>>({});

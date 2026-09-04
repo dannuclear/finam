@@ -51,4 +51,5 @@ public class TimeFrameUtils {
                     "Unsupported timeframe: " + timeFrame);
         };
     }
+
 }

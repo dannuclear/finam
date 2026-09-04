@@ -10,25 +10,21 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.DataWithMediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.ta4j.core.Bar;
-import org.ta4j.core.BarSeries;
 import org.ta4j.core.ConcurrentBarSeries;
 import org.ta4j.core.ConcurrentBarSeriesBuilder;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.Rule;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.bars.TimeBarBuilderFactory;
-import org.ta4j.core.indicators.CachedIndicator;
 import org.ta4j.core.indicators.averages.SMAIndicator;
-import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.indicators.helpers.PreviousValueIndicator;
 import org.ta4j.core.indicators.numeric.NumericIndicator;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.rules.JustOnceRule;
@@ -49,14 +45,15 @@ import ru.nuclearius.finam.service.domain.Order;
 import ru.nuclearius.finam.service.domain.Order.Side;
 import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber;
 import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber.QuoteListener;
+import ru.nuclearius.finam.ta4j.indicator.LastAverageIndicator;
+import ru.nuclearius.finam.ta4j.indicator.NormalizedPriceIndicator;
+import ru.nuclearius.finam.utils.DateUtils;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implements QuoteListener {
     private Set<String> symbols;
-    private Integer fastMaBarCount = 4;
-    private Integer averageDaysCount = 6;
     private Map<String, AssetOptions> assetMap;
 
     private final BarService barService;
@@ -81,43 +78,33 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         Assert.notNull(fastMaBarCount, "Количество баров быстрой средней не указано");
         Assert.notNull(averageDaysCount, "Количество дней средней не указано");
         Assert.notNull(spread, "Спред не указан");
-        this.averageDaysCount = averageDaysCount;
-        this.fastMaBarCount = fastMaBarCount;
-        Instant now = Instant.now();
-        assetMap = symbols.stream().map(s -> barService
-                .ta4jConcurrentSeriesAsync(s, TimeFrame.TIME_FRAME_D, now.minus(Duration.ofDays(averageDaysCount)),
-                        now.minus(Duration.ofDays(1)))
-                .thenApply(averageBarSeries -> {
-                    averageBarSeries.setMaximumBarCount(averageDaysCount);
-                    ClosePriceIndicator averageClosePriceIndicator = new ClosePriceIndicator(averageBarSeries);
-                    Indicator<Num> slowMaIndicator = new SMAIndicator(averageClosePriceIndicator, averageDaysCount);
-                    ConcurrentBarSeries barSeries = new ConcurrentBarSeriesBuilder()
-                            .withName(s + "-live-series")
-                            .withBarBuilderFactory(new TimeBarBuilderFactory(Duration.ofMinutes(1), true))
-                            .build();
-                    Indicator<Num> normalizedIndicator = NumericIndicator.closePrice(barSeries)
-                            .dividedBy(new CachedIndicator<Num>(barSeries) {
 
-                                @Override
-                                public int getCountOfUnstableBars() {
-                                    return slowMaIndicator.getCountOfUnstableBars();
-                                }
+        ConcurrentBarSeriesBuilder slowSeriesBuilder = new ConcurrentBarSeriesBuilder()
+                .withBarBuilderFactory(new TimeBarBuilderFactory(Duration.ofDays(1), true));
+        ConcurrentBarSeriesBuilder liveSeriesBuilder = new ConcurrentBarSeriesBuilder()
+                .withBarBuilderFactory(new TimeBarBuilderFactory(Duration.ofMinutes(1), true));
 
-                                @Override
-                                protected Num calculate(int index) {
-                                    BarSeries barSeries = slowMaIndicator.getBarSeries();
-                                    return slowMaIndicator.getValue(barSeries.getEndIndex());
-                                }
-                            })
-                            .minus(1)
-                            .multipliedBy(100.0);
-                    Indicator<Num> fastMaIndicator = new SMAIndicator(normalizedIndicator, fastMaBarCount);
-                    Indicator<Num> offsetIndicator = NumericIndicator.of(fastMaIndicator).minus(spread);
+        assetMap = symbols.stream().map(symbol -> {
+            ConcurrentBarSeries slowSeries = slowSeriesBuilder.withName(symbol + "-slow-series")
+                    .build();
+            LastAverageIndicator slowMaIndicator = LastAverageIndicator.of(slowSeries, averageDaysCount);
+            ConcurrentBarSeries liveSeries = liveSeriesBuilder.withName(symbol + "-live-series")
+                    .build();
+            NormalizedPriceIndicator nPriceIndicator = new NormalizedPriceIndicator(liveSeries,
+                    slowMaIndicator);
+            Indicator<Num> fastMaIndicator = new SMAIndicator(nPriceIndicator, fastMaBarCount);
+            Indicator<Num> offsetIndicator = NumericIndicator.of(fastMaIndicator).minus(spread);
 
-                    return new AssetOptions(s, barSeries, fastMaIndicator, slowMaIndicator, normalizedIndicator,
-                            offsetIndicator);
-                }))
-                .map(CompletableFuture::join).collect(Collectors.toMap(AssetOptions::symbol, Function.identity()));
+            AssetOptions options = new AssetOptions(
+                    symbol,
+                    liveSeries,
+                    slowMaIndicator,
+                    nPriceIndicator,
+                    fastMaIndicator,
+                    offsetIndicator);
+
+            return Pair.of(symbol, options);
+        }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
 
         rules = assetMap.entrySet().stream()
                 .collect(Collectors.toMap(
@@ -137,6 +124,20 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
                                                 }
                                             });
                                 }))));
+
+        Duration slowDuration = DateUtils.toDuration(TimeFrame.TIME_FRAME_D);
+        Instant now = Instant.now();
+        Instant end = now.minus(slowDuration);
+        Instant start = end.minus(slowDuration.multipliedBy(averageDaysCount - 1));
+
+        List<CompletableFuture<Void>> features = assetMap.entrySet().stream()
+                .map(e -> barService.ta4jConcurrentSeriesAsync(e.getKey(), TimeFrame.TIME_FRAME_D, start, end)
+                        .thenAccept(series -> {
+                            e.getValue().slowMaIndicator().update(series.getBarData());
+                        }))
+                .toList();
+        features.forEach(CompletableFuture::join);
+
         this.symbols = symbols;
         quoteSubscriber.addListener(symbols, this);
         isRunning.set(true);
@@ -164,7 +165,8 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         if (series.getEndIndex() == -1 || !quote.getTimestamp().isBefore(series.getLastBar().getBeginTime()))
             series.ingestTrade(quote.getTimestamp(), quote.getLastSize(), quote.getLast());
 
-        BigDecimal normalizedValue = getIndicatorLastValue(option.normalizedIndicator());
+        NormalizedPriceIndicator normalizedOnSlowMaIndicator = option.normalizedOnSlowMaIndicator();
+        BigDecimal normalizedValue = getIndicatorLastValue(normalizedOnSlowMaIndicator);
         BigDecimal fastMaValue = getIndicatorLastValue(option.fastMaIndicator());
         BigDecimal offsetValue = getIndicatorLastValue(option.offsetIndicator());
 
@@ -257,9 +259,9 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
     private record AssetOptions(
             String symbol,
             ConcurrentBarSeries barSeries,
+            LastAverageIndicator slowMaIndicator,
+            NormalizedPriceIndicator normalizedOnSlowMaIndicator,
             Indicator<Num> fastMaIndicator,
-            Indicator<Num> slowMaIndicator,
-            Indicator<Num> normalizedIndicator,
             Indicator<Num> offsetIndicator) {
     }
 
