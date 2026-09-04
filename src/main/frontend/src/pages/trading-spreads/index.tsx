@@ -240,8 +240,8 @@ const AssetListPage = () => {
                                 key={`${symbol}-fast-ma`}
                                 data={[]}
                                 options={{
-                                    lineWidth: 1,
-                                    lineStyle: LineStyle.Dotted,
+                                    lineWidth: 2,
+                                    lineStyle: LineStyle.Solid,
                                     color: seriesColors[symbol] ?? "#9ccaff",
                                     priceLineVisible: false,
                                     lastValueVisible: false,
@@ -262,6 +262,7 @@ const AssetListPage = () => {
                                 data={[]}
                                 options={{
                                     lineWidth: 1,
+                                    lineStyle: LineStyle.Dotted,
                                     color: seriesColors[symbol] ?? "#9ccaff",
                                     priceLineVisible: false,
                                     lastValueVisible: false,
