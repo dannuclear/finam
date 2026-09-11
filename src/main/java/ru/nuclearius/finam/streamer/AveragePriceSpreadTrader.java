@@ -120,7 +120,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
 
             if (bestBuySymbol != null && bestSellSymbol != null && bestSpread < 0 && toSellPosition != null && !orderService.hasChains()) {
                 log.info("Лучший спред {} продать {} купить {}", bestSpread, bestSellSymbol, bestBuySymbol);
-                // createRebalanceChain(bestBuySymbol, bestSellSymbol, toSellPosition);
+                createRebalanceChain(bestBuySymbol, bestSellSymbol, toSellPosition);
             }
 
             if (hasEmitters(EMMITTER_KEY)) {
