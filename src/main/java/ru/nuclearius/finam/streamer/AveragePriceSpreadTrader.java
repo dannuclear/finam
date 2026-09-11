@@ -249,7 +249,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         BigDecimal buyQuantity = amount.divide(
                 targetPrice,
                 0,
-                RoundingMode.DOWN);
+                RoundingMode.DOWN).add(BigDecimal.ONE);
 
         if (buyQuantity.signum() == 0) {
             return;
