@@ -81,6 +81,8 @@ public class OrderService implements OrderListener {
                     order.getClientOrderId(),
                     chain.getId());
 
+            log.info("put clientOrderToChain size: {}", clientOrderToChain.size());
+
             finamService.placeOrder(
                     ACCOUNT_ID,
                     order.getSymbol(),
@@ -137,7 +139,7 @@ public class OrderService implements OrderListener {
 
     private void onFilled(OrderChain chain, String clientOrderId) {
         clientOrderToChain.remove(clientOrderId, chain.getId());
-
+        log.info("remove on fill clientOrderToChain size: {}", clientOrderToChain.size());
         if (chain.hasNext())
             executeNext(chain);
         else
@@ -146,6 +148,7 @@ public class OrderService implements OrderListener {
 
     private void onFailed(OrderChain chain, String clientOrderId) {
         clientOrderToChain.remove(clientOrderId, chain.getId());
+        log.info("remove on fail clientOrderToChain size: {}", clientOrderToChain.size());
         chain.fail();
     }
 }

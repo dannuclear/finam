@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,13 +26,17 @@ import org.ta4j.core.Indicator;
 import org.ta4j.core.Rule;
 import org.ta4j.core.bars.TimeBarBuilderFactory;
 import org.ta4j.core.indicators.averages.SMAIndicator;
+import org.ta4j.core.indicators.helpers.CombineIndicator;
+import org.ta4j.core.indicators.numeric.BinaryOperationIndicator;
 import org.ta4j.core.indicators.numeric.NumericIndicator;
 import org.ta4j.core.num.Num;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import grpc.tradeapi.v1.marketdata.TimeFrame;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import ru.nuclearius.finam.client.dto.Account.Position;
 import ru.nuclearius.finam.client.dto.Quote;
@@ -46,7 +49,6 @@ import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber;
 import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber.QuoteListener;
 import ru.nuclearius.finam.ta4j.indicator.LastAverageIndicator;
 import ru.nuclearius.finam.ta4j.indicator.NormalizedPriceIndicator;
-import ru.nuclearius.finam.ta4j.rule.LastValueUnderIndicatorRule;
 import ru.nuclearius.finam.utils.DateUtils;
 
 @Slf4j
@@ -63,44 +65,62 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
     private static final String EMMITTER_KEY = "spread-trader";
-    private Map<String, Map<String, Rule>> rules;
+    private Double spread;
+    // private Map<String, Map<String, Rule>> rules;
 
     @Scheduled(fixedDelay = 5_000)
     private void process() {
         if (isRunning.get() && assetMap != null) {
+            String bestSellSymbol = null;
+            String bestBuySymbol = null;
+            Double bestSpread = 0.0;
+            Position toSellPosition = null;
             Map<String, EmitterData> emitterData = new HashMap<>(assetMap.size() * 3);
             for (Map.Entry<String, AssetData> e : assetMap.entrySet()) {
                 String toBuySymbol = e.getKey();
                 AssetData assetData = e.getValue();
-                BarSeries barSeries = assetData.barSeries();
+                BarSeries barSeries = assetData.getBarSeries();
                 Integer endIndex = barSeries.getEndIndex();
                 List<Position> positions = accountInfoSubscriber.getPositions();
-                Map<String, Rule> pairedRules = rules.get(toBuySymbol);
-                for (Map.Entry<String, Rule> ruleEntry : pairedRules.entrySet()) {
-                    String toSellSymbol = ruleEntry.getKey();
-                    Rule rule = ruleEntry.getValue();
-                    if (rule.isSatisfied(endIndex)) {
-                        log.info("Спред между дешевой {} и дорогой {}", toBuySymbol, toSellSymbol);
-                        Optional<Position> positionOpt = positions.stream()
-                                .filter(p -> p.getSymbol().equals(toSellSymbol)).findFirst();
-                        if (positions != null && !orderService.hasChains() && positionOpt.isPresent()) {
-                            log.info("Продаем {} покупаем {}", toSellSymbol, toBuySymbol);
-                            createRebalanceChain(toBuySymbol, toSellSymbol, positionOpt.get());
+                Map<String, Indicator<Num>> spreadIndicators = assetData.getSpreadIndicators();
+                // Map<String, Rule> pairedRules = rules.get(toBuySymbol);
+                for (Map.Entry<String, Indicator<Num>> sellEntry : spreadIndicators.entrySet()) {
+                    String toSellSymbol = sellEntry.getKey();
+                    Indicator<Num> spreadIndicator = sellEntry.getValue();
+                    Double pairSpread = spreadIndicator.getValue(endIndex).doubleValue();
+                    if (-pairSpread > spread) {
+                        log.debug("Спред {} между дешевой {} и дорогой {}", pairSpread, toBuySymbol, toSellSymbol);
+                        Position position = positions.stream()
+                                .filter(p -> p.getSymbol().equals(toSellSymbol)).findFirst().orElse(null);
+                        if (positions != null && !orderService.hasChains() && position != null
+                                && position.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                            log.debug("Продаем {} покупаем {}", toSellSymbol, toBuySymbol);
+                            if (pairSpread < bestSpread) {
+                                bestSellSymbol = toSellSymbol;
+                                bestBuySymbol = toBuySymbol;
+                                bestSpread = pairSpread;
+                                toSellPosition = position;
+                            }
                         } else {
-                            log.info("Позиции нет");
+                            log.debug("Позиции нет");
                         }
                     }
                 }
                 Bar lastBar = barSeries.getBar(endIndex);
                 emitterData.put(toBuySymbol, new EmitterData(
                         lastBar.getEndTime(),
-                        assetData.normalizedOnSlowMaIndicator().getValue(endIndex).bigDecimalValue()));
+                        assetData.getNormalizedOnSlowMaIndicator().getValue(endIndex).bigDecimalValue()));
                 emitterData.put(toBuySymbol + "-fast-ma", new EmitterData(
                         lastBar.getEndTime(),
-                        assetData.fastMaIndicator().getValue(endIndex).bigDecimalValue()));
+                        assetData.getFastMaIndicator().getValue(endIndex).bigDecimalValue()));
                 emitterData.put(toBuySymbol + "-offset-ma", new EmitterData(
                         lastBar.getEndTime(),
-                        assetData.offsetIndicator().getValue(endIndex).bigDecimalValue()));
+                        assetData.getOffsetIndicator().getValue(endIndex).bigDecimalValue()));
+            }
+
+            if (bestBuySymbol != null && bestSellSymbol != null && bestSpread < 0 && toSellPosition != null && !orderService.hasChains()) {
+                log.info("Лучший спред {} продать {} купить {}", bestSpread, bestSellSymbol, bestBuySymbol);
+                // createRebalanceChain(bestBuySymbol, bestSellSymbol, toSellPosition);
             }
 
             if (hasEmitters(EMMITTER_KEY)) {
@@ -154,17 +174,18 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
             return Pair.of(symbol, options);
         }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
 
-        rules = assetMap.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        first -> assetMap.entrySet().stream()
-                                .filter(second -> !second.getKey().equals(first.getKey()))
-                                .collect(Collectors.toMap(Map.Entry::getKey, second -> {
-                                    return LastValueUnderIndicatorRule.of(
-                                            first.getValue().fastMaIndicator(),
-                                            second.getValue().offsetIndicator(),
-                                            1);
-                                }))));
+        assetMap.entrySet().stream()
+                .forEach(entry -> {
+                    String firstSymbol = entry.getKey();
+                    AssetData data = entry.getValue();
+                    data.setSpreadIndicators(assetMap.entrySet().stream()
+                            .filter(second -> !second.getKey().equals(firstSymbol))
+                            .collect(Collectors.toMap(Map.Entry::getKey,
+                                    second -> CombineIndicator.minus(
+                                            data.getFastMaIndicator(),
+                                            LastValueMinusOffsetIndicator.of(second.getValue().getFastMaIndicator(),
+                                                    1)))));
+                });
 
         Duration slowDuration = DateUtils.toDuration(TimeFrame.TIME_FRAME_D);
         Instant now = Instant.now();
@@ -174,11 +195,20 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         List<CompletableFuture<Void>> features = assetMap.entrySet().stream()
                 .map(e -> barService.ta4jConcurrentSeriesAsync(e.getKey(), TimeFrame.TIME_FRAME_D, start, end)
                         .thenAccept(series -> {
-                            e.getValue().slowMaIndicator().update(series.getBarData());
+                            e.getValue().getSlowMaIndicator().update(series.getBarData());
                         }))
                 .toList();
         features.forEach(CompletableFuture::join);
 
+        List<CompletableFuture<Void>> fastFeatures = assetMap.entrySet().stream()
+                .map(e -> barService
+                        .ta4jConcurrentSeriesAsync(e.getKey(), TimeFrame.TIME_FRAME_M1,
+                                now.minus(Duration.ofMinutes(10)), now)
+                        .thenAccept(series -> series.getBarData().forEach(b -> e.getValue().getBarSeries().addBar(b))))
+                .toList();
+        fastFeatures.forEach(CompletableFuture::join);
+
+        this.spread = spread;
         this.symbols = symbols;
         quoteSubscriber.addListener(symbols, this);
         isRunning.set(true);
@@ -201,7 +231,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
             return;
         String symbol = quote.getSymbol();
         AssetData option = assetMap.get(symbol);
-        ConcurrentBarSeries series = option.barSeries();
+        ConcurrentBarSeries series = option.getBarSeries();
 
         if (series.getEndIndex() == -1 || !quote.getTimestamp().isBefore(series.getLastBar().getBeginTime()))
             series.ingestTrade(quote.getTimestamp(), quote.getLastSize(), quote.getLast());
@@ -209,7 +239,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
 
     private void createRebalanceChain(String buySymbol, String sellSymbol, Position sellPosition) {
         Bar targetBar = assetMap.get(buySymbol)
-                .barSeries()
+                .getBarSeries()
                 .getLastBar();
 
         BigDecimal amount = sellPosition.getCurrentPrice()
@@ -245,12 +275,16 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
                         .build()));
     }
 
-    private record AssetData(
-            ConcurrentBarSeries barSeries,
-            LastAverageIndicator slowMaIndicator,
-            NormalizedPriceIndicator normalizedOnSlowMaIndicator,
-            Indicator<Num> fastMaIndicator,
-            Indicator<Num> offsetIndicator) {
+    @Getter
+    @Setter
+    @RequiredArgsConstructor
+    private class AssetData {
+        private final ConcurrentBarSeries barSeries;
+        private final LastAverageIndicator slowMaIndicator;
+        private final NormalizedPriceIndicator normalizedOnSlowMaIndicator;
+        private final Indicator<Num> fastMaIndicator;
+        private final Indicator<Num> offsetIndicator;
+        private Map<String, Indicator<Num>> spreadIndicators;
     }
 
     private record EmitterData(

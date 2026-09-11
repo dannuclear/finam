@@ -54,7 +54,7 @@ const AssetListPage = () => {
     const [assets, setAssets] = useState<Asset[]>(defaultAssets)
     const [fastMaCount, setFastMaCount] = useState<string>("5")
     const [daysCount, setDaysCount] = useState<string>("10")
-    const [spread, setSpread] = useState<string>("0.24")
+    const [spread, setSpread] = useState<string>("0.25")
     const [showPrice, setShowPrice] = useState<boolean>(false)
 
     const [seriesColors, setSeriesColors] = useState<Record<string, string>>({});
