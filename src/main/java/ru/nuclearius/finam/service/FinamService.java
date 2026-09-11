@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -386,6 +387,7 @@ public class FinamService {
         TradeHistory tradeHistory = getTrades(accountId, limit, startTime, endTime);
 
         return tradeHistory.getTrades().stream()
+                .peek(t -> t.setTimestamp(t.getTimestamp().truncatedTo(ChronoUnit.MINUTES)))
                 .collect(Collectors.groupingBy(
                         TradeHistory.Trade::getSymbol,
                         LinkedHashMap::new,

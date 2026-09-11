@@ -6,7 +6,7 @@ import type { Asset } from "@shared/api/schema"
 import { TIMEFRAMES, type TimeFrameConfig } from "@shared/model/timeframes"
 import { BarChart } from "@shared/ui"
 import Legend from "@widgets/chart/ui/legend"
-import { LineStyle } from "lightweight-charts"
+import { LineStyle, type Time } from "lightweight-charts"
 import { LineSeries, Pane, type SeriesApiRef } from "lightweight-charts-react-components"
 import { useEffect, useRef, useState } from "react"
 
@@ -27,11 +27,11 @@ const SERIES_COLORS = [
 
 const defaultAssets: Asset[] = [
     { name: "ОФЗ 26248", symbol: "SU26248RMFS3@MISX" },
-    { name: "ОФЗ 26254", symbol: "SU26254RMFS1@MISX" },
     { name: "ОФЗ 26238", symbol: "SU26238RMFS4@MISX" },
+    { name: "ОФЗ 26230", symbol: "SU26230RMFS1@MISX" },
+    { name: "ОФЗ 26254", symbol: "SU26254RMFS1@MISX" },
     { name: "ОФЗ 26253", symbol: "SU26253RMFS3@MISX" },
     { name: "ОФЗ 26247", symbol: "SU26247RMFS5@MISX" },
-    { name: "ОФЗ 26230", symbol: "SU26230RMFS1@MISX" },
     { name: "ОФЗ 26245", symbol: "SU26245RMFS9@MISX" },
 ]
 
@@ -52,9 +52,9 @@ const AssetListPage = () => {
     const { data: isRunning } = useTradingSpreadsStatus()
 
     const [assets, setAssets] = useState<Asset[]>(defaultAssets)
-    const [fastMaCount, setFastMaCount] = useState<number>(5)
-    const [daysCount, setDaysCount] = useState<number>(6)
-    const [spread, setSpread] = useState<number>(0.24)
+    const [fastMaCount, setFastMaCount] = useState<string>("5")
+    const [daysCount, setDaysCount] = useState<string>("10")
+    const [spread, setSpread] = useState<string>("0.24")
     const [showPrice, setShowPrice] = useState<boolean>(false)
 
     const [seriesColors, setSeriesColors] = useState<Record<string, string>>({});
@@ -77,9 +77,9 @@ const AssetListPage = () => {
             params: {
                 query: {
                     assets: assets?.map(a => a.symbol ?? ""),
-                    fastMaCount: fastMaCount,
-                    daysCount: daysCount,
-                    spread: spread
+                    fastMaCount: Number(fastMaCount),
+                    daysCount: Number(daysCount),
+                    spread: Number(spread)
                 }
             }
         })
@@ -92,59 +92,34 @@ const AssetListPage = () => {
 
         const source = new EventSource(`/api/v1/spreads/subcribe`)
 
-        source.addEventListener("quote", (event) => {
-            const quote = JSON.parse(event.data)
-            // console.log(quote);
+        source.addEventListener("spread-trader", (event) => {
+            const quotes = JSON.parse(event.data) as Record<
+                string,
+                {
+                    timestamp: string;
+                    value: number;
+                    seconds: number;
+                }
+            >;
+            
+            Object.entries(quotes).forEach(([symbol, quote]) => {
+                const ref = seriesRefs.current.get(symbol);
 
-            const ref = seriesRefs.current.get(quote.symbol)
+                if (!ref) {
+                    return;
+                }
 
-            if (ref) {
                 const series = ref.api();
-                if (!series || !quote.last) return;
+
+                if (!series) {
+                    return;
+                }
 
                 series.update({
-                    time: quote.seconds,
-                    value: quote.last
+                    time: quote.seconds as Time,
+                    value: quote.value
                 });
-                // console.log(quote.symbol, ref)
-                // console.log(quote.symbol, quote.mills, quote.last)
-            }
-
-            const fastMaRef = seriesRefs.current.get(`${quote.symbol}-fast-ma`)
-
-            if (fastMaRef) {
-                const series = fastMaRef.api();
-                if (!series || !quote.fastMa) return;
-
-                series.update({
-                    time: quote.seconds,
-                    value: quote.fastMa
-                });
-            }
-
-            const slowMaRef = seriesRefs.current.get(`${quote.symbol}-slow-ma`)
-
-            if (slowMaRef) {
-                const series = slowMaRef.api();
-                if (!series || !quote.slowMa) return;
-
-                series.update({
-                    time: quote.seconds,
-                    value: quote.slowMa
-                });
-            }
-
-            const offsetMaRef = seriesRefs.current.get(`${quote.symbol}-offset`)
-
-            if (offsetMaRef) {
-                const series = offsetMaRef.api();
-                if (!series || !quote.offset) return;
-
-                series.update({
-                    time: quote.seconds,
-                    value: quote.offset
-                });
-            }
+            });
         })
 
         return () => {
@@ -176,19 +151,19 @@ const AssetListPage = () => {
                 <TextField
                     label="Быстрая средняя"
                     value={fastMaCount}
-                    onChange={e => setFastMaCount(Number(e.target.value))} />
+                    onChange={e => setFastMaCount(e.target.value)} />
             </Grid>
             <Grid size={1}>
                 <TextField
                     label="Дней средней"
                     value={daysCount}
-                    onChange={e => setDaysCount(Number(e.target.value))} />
+                    onChange={e => setDaysCount(e.target.value)} />
             </Grid>
             <Grid size={1}>
                 <TextField
                     label="Спред"
                     value={spread}
-                    onChange={e => setSpread(Number(e.target.value))} />
+                    onChange={e => setSpread(e.target.value)} />
             </Grid>
             <Grid size={1} textAlign="center">
                 <FormControlLabel control={<Switch
@@ -258,7 +233,7 @@ const AssetListPage = () => {
 
                         {data?.map(symbol =>
                             <LineSeries
-                                key={`${symbol}-offset`}
+                                key={`${symbol}-offset-ma`}
                                 data={[]}
                                 options={{
                                     lineWidth: 1,
@@ -269,9 +244,9 @@ const AssetListPage = () => {
                                 }}
                                 ref={(ref) => {
                                     if (ref) {
-                                        seriesRefs.current.set(`${symbol}-offset`, ref)
+                                        seriesRefs.current.set(`${symbol}-offset-ma`, ref)
                                     } else {
-                                        seriesRefs.current.delete(`${symbol}-offset`)
+                                        seriesRefs.current.delete(`${symbol}-offset-ma`)
                                     }
                                 }} >
                             </LineSeries>

@@ -60,6 +60,7 @@ public class QuoteSingletonSubscriber extends AbstractBackoffObserver<SubscribeQ
                             listener.onQuote(quote);
                         } catch (Exception e) {
                             log.error("Quote listener failed for symbol {}", quote.getSymbol());
+                            e.printStackTrace();
                         }
                     }
                 });

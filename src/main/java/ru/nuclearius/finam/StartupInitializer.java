@@ -15,6 +15,7 @@ import ru.nuclearius.finam.grpc.JwtTokenHolder;
 import ru.nuclearius.finam.service.OrderService;
 import ru.nuclearius.finam.streamer.AveragePriceSpreadTrader;
 import ru.nuclearius.finam.streamer.QuoteOrderStreamer;
+import ru.nuclearius.finam.subscriber.account.AccountInfoSubscriber;
 import ru.nuclearius.finam.subscriber.orders.AccountOrdersSubscriber;
 import ru.nuclearius.finam.subscriber.quotes.QuoteSingletonSubscriber;
 import ru.nuclearius.finam.subscriber.token.JwtRenewalSubscriber;
@@ -30,6 +31,7 @@ public class StartupInitializer {
     private final JwtRenewalSubscriber jwtRenewalSubscriber;
     private final QuoteSingletonSubscriber quoteSubscriber;
     private final AccountOrdersSubscriber accountOrdersSubscriber;
+    private final AccountInfoSubscriber accountInfoSubscriber;
 
     private final QuoteOrderStreamer quoteOrderStreamer;
 
@@ -42,6 +44,7 @@ public class StartupInitializer {
         tokenHolder.awaitToken(Duration.ofSeconds(5)).thenAcceptAsync(token -> {
             quoteSubscriber.start();
             accountOrdersSubscriber.start();
+            accountInfoSubscriber.start();
         }, singleTaskExecutor);
 
         accountOrdersSubscriber.addListener(quoteOrderStreamer);

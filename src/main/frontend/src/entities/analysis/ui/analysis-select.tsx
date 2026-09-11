@@ -10,7 +10,7 @@ export const AnalysisSelect = <Multiple extends boolean | undefined = false>({
     ...rest
 }: AnalysisSelectProps<Multiple>) => {
     const [q, setQ] = useState<string>()
-    const { data, isPending } = useAnalysisPage({ page: 0, size: 10, q })
+    const { data, isPending } = useAnalysisPage({ page: 0, size: 20, q })
 
     return (<DebouncedAutocomplete
         label={label}

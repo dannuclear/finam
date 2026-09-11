@@ -6,6 +6,7 @@ import org.springframework.grpc.client.GrpcChannelBuilderCustomizer;
 import org.springframework.grpc.client.ImportGrpcClients;
 
 import grpc.tradeapi.v1.accounts.AccountsServiceGrpc.AccountsServiceBlockingStub;
+import grpc.tradeapi.v1.accounts.AccountsServiceGrpc.AccountsServiceStub;
 import grpc.tradeapi.v1.assets.AssetsServiceGrpc.AssetsServiceBlockingStub;
 import grpc.tradeapi.v1.auth.AuthServiceGrpc.AuthServiceBlockingStub;
 import grpc.tradeapi.v1.auth.AuthServiceGrpc.AuthServiceStub;
@@ -22,7 +23,8 @@ import grpc.tradeapi.v1.orders.OrdersServiceGrpc.OrdersServiceStub;
         MarketDataServiceStub.class,
         MarketDataServiceBlockingStub.class,
         OrdersServiceStub.class,
-        OrdersServiceBlockingStub.class
+        OrdersServiceBlockingStub.class,
+        AccountsServiceStub.class
 })
 @ImportGrpcClients(types = { AuthServiceStub.class }, target = "auth")
 public class FinamConfig {

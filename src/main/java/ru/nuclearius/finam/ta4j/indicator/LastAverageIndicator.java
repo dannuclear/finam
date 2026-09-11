@@ -25,8 +25,6 @@ public class LastAverageIndicator implements Indicator<Num> {
 
     private LastAverageIndicator(BarSeries barSeries, int barsCount) {
         this.barsCount = barsCount;
-
-        barSeries.setMaximumBarCount(barsCount);
         this.barSeries = barSeries;
 
         this.averageIndicator = new SMAIndicator(
