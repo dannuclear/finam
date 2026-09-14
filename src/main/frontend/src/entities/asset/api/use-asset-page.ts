@@ -12,7 +12,7 @@ const useAssetPage = ({
                 q
             }
         }
-    })
+    }, { retry: false, refetchOnWindowFocus: false })
 }
 
 export default useAssetPage
