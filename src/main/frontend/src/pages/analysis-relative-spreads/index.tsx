@@ -16,8 +16,8 @@ import { useMemo, useState } from "react";
 
 const Index = () => {
     const [timeFrame, setTimeFrame] = useState<TimeFrameConfig>(TIMEFRAMES[7]);
-    const [startTime, setStartTime] = useState<Dayjs>(dayjs().subtract(timeFrame.maxDays, "day"))
-    const [endTime, setEndTime] = useState<Dayjs>(dayjs())
+    const [startTime, setStartTime] = useState<Dayjs>(dayjs().subtract(timeFrame.maxDays+1, "day"))
+    const [endTime, setEndTime] = useState<Dayjs>(dayjs().subtract(1, "day"))
     // const [averageTimeFrame, setAverageTimeFrame] = useState<TimeFrameConfig>(TIMEFRAMES[8]);
     const [averageStartTime, setAverageStartTime] = useState<Dayjs>(dayjs().subtract(TIMEFRAMES[8].maxDays / 2 - 40, "day"))
     const [averageEndTime, setAverageEndTime] = useState<Dayjs>(dayjs())
