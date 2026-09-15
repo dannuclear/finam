@@ -6,6 +6,7 @@ export const useTradingSpreadsStart = () => {
         onSuccess: () => {
             queryClient.invalidateQueries(rqClient.queryOptions("get", "/api/v1/spreads/status"))
             queryClient.invalidateQueries(rqClient.queryOptions("get", "/api/v1/spreads/symbols"))
+            queryClient.invalidateQueries(rqClient.queryOptions("get", "/api/v1/spreads/data"))
         },
         retry: false,
     })

@@ -1,14 +1,14 @@
 import { AssetSelect } from "@features/asset/ui/asset-select"
-import { useTradingSpreadsStart, useTradingSpreadsStatus, useTradingSpreadsStop, useTradingSpreadsSymbols } from "@features/trading-spreads"
+import { useTradingSpreadsData, useTradingSpreadsStart, useTradingSpreadsStatus, useTradingSpreadsStop, useTradingSpreadsSymbols } from "@features/trading-spreads"
 import { Button, FormControlLabel, Switch, TextField } from "@mui/material"
 import Grid from "@mui/material/Grid"
 import type { Asset } from "@shared/api/schema"
 import { TIMEFRAMES, type TimeFrameConfig } from "@shared/model/timeframes"
 import { BarChart } from "@shared/ui"
 import Legend from "@widgets/chart/ui/legend"
-import { LineStyle, type Time } from "lightweight-charts"
+import { LineStyle, type LineData, type Time } from "lightweight-charts"
 import { LineSeries, Pane, type SeriesApiRef } from "lightweight-charts-react-components"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 const SERIES_COLORS = [
     "#1565C0", // blue
@@ -46,6 +46,7 @@ const AssetListPage = () => {
         new Map<string, SeriesApiRef<"Line">>()
     )
     const { data } = useTradingSpreadsSymbols()
+    const { data: predata } = useTradingSpreadsData()
 
     const { mutate: start, isPending: isStartPending } = useTradingSpreadsStart()
     const { mutate: stop, isPending: isStopPending } = useTradingSpreadsStop()
@@ -57,21 +58,10 @@ const AssetListPage = () => {
     const [spread, setSpread] = useState<string>("0.25")
     const [showPrice, setShowPrice] = useState<boolean>(false)
 
-    const [seriesColors, setSeriesColors] = useState<Record<string, string>>({});
-
     const startInternal = () => {
         if (!assets) {
             return;
         }
-
-        const colors: Record<string, string> = {};
-
-        assets.forEach((asset, index) => {
-            const symbol = asset.symbol ?? "";
-            colors[symbol] = generateColor(index);
-        });
-
-        setSeriesColors(colors);
 
         start({
             params: {
@@ -101,7 +91,7 @@ const AssetListPage = () => {
                     seconds: number;
                 }
             >;
-            
+
             Object.entries(quotes).forEach(([symbol, quote]) => {
                 const ref = seriesRefs.current.get(symbol);
 
@@ -128,13 +118,36 @@ const AssetListPage = () => {
 
     }, [isRunning])
 
+    const initialData = useMemo(() => {
+        const map = new Map<string, { data: LineData[], lineColor: string }>();
+
+        if (!predata) {
+            return map;
+        }
+
+        Object.entries(predata).forEach(([_symbol, seriesList], index) => {
+            map.set(
+                _symbol,
+                {
+                    data: seriesList?.values?.map((p) => ({
+                        time: p.seconds as Time,
+                        value: p.value ?? 0,
+                    })) ?? [],
+                    lineColor: generateColor(index)
+                }
+            )
+        });
+
+        return map;
+    }, [predata]);
+
     const legendOptions = assets?.map(item => {
         const id = item.symbol ?? "";
 
         return {
             id,
             label: item.name ?? "no-name",
-            color: seriesColors[id] ?? "rgba(0, 0, 0, 0)",
+            color: initialData?.get(id)?.lineColor ?? "rgba(0, 0, 0, 0)",
             enabled: true
         };
     }) ?? [];
@@ -195,7 +208,7 @@ const AssetListPage = () => {
                                 data={[]}
                                 options={{
                                     lineWidth: 1,
-                                    color: seriesColors[symbol] ?? "#9ccaff",
+                                    color: initialData?.get(symbol)?.lineColor ?? "#9ccaff",
                                     priceLineVisible: false,
                                     lastValueVisible: false
                                 }}
@@ -213,11 +226,11 @@ const AssetListPage = () => {
                         {data?.map(symbol =>
                             <LineSeries
                                 key={`${symbol}-fast-ma`}
-                                data={[]}
+                                data={initialData?.get(symbol)?.data ?? []}
                                 options={{
                                     lineWidth: 2,
                                     lineStyle: LineStyle.Solid,
-                                    color: seriesColors[symbol] ?? "#9ccaff",
+                                    color: initialData?.get(symbol)?.lineColor ?? "#9ccaff",
                                     priceLineVisible: false,
                                     lastValueVisible: false,
                                 }}
@@ -238,7 +251,7 @@ const AssetListPage = () => {
                                 options={{
                                     lineWidth: 1,
                                     lineStyle: LineStyle.Dotted,
-                                    color: seriesColors[symbol] ?? "#9ccaff",
+                                    color: initialData?.get(symbol)?.lineColor ?? "#9ccaff",
                                     priceLineVisible: false,
                                     lastValueVisible: false,
                                 }}

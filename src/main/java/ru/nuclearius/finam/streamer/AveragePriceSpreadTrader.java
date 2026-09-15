@@ -61,7 +61,8 @@ import ru.nuclearius.finam.utils.DateUtils;
 @RequiredArgsConstructor
 public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implements QuoteListener {
     private Set<String> symbols;
-    private Map<String, AssetData> assetMap;
+    @Getter
+    private Map<String, AssetData> assetIndicators;
 
     private final BarService barService;
     private final QuoteSingletonSubscriber quoteSubscriber;
@@ -75,7 +76,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
 
     @Scheduled(fixedDelay = 5_000)
     private void process() {
-        if (isRunning.get() && assetMap != null) {
+        if (isRunning.get() && assetIndicators != null) {
 
             Num numSpread = DecimalNum.valueOf(spread);
             List<PairSpreadValue> pairSpreadValues = pairIndicators.stream()
@@ -108,8 +109,8 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
     }
 
     private void sendToEmiters() {
-        Map<String, EmitterData> emitterData = new HashMap<>(assetMap.size() * 3);
-        for (Map.Entry<String, AssetData> e : assetMap.entrySet()) {
+        Map<String, EmitterData> emitterData = new HashMap<>(assetIndicators.size() * 3);
+        for (Map.Entry<String, AssetData> e : assetIndicators.entrySet()) {
             String toBuySymbol = e.getKey();
             AssetData assetData = e.getValue();
             BarSeries barSeries = assetData.getBarSeries();
@@ -167,7 +168,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
                 .withMaxBarCount(100)
                 .withBarBuilderFactory(new TimeBarBuilderFactory(Duration.ofMinutes(1), true));
 
-        assetMap = symbols.stream().map(symbol -> {
+        assetIndicators = symbols.stream().map(symbol -> {
             ConcurrentBarSeries slowSeries = slowSeriesBuilder.withName(symbol + "-slow-series")
                     .build();
             LastAverageIndicator slowMaIndicator = LastAverageIndicator.of(slowSeries, averageDaysCount);
@@ -190,8 +191,8 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
     }
 
     private void buildPairs() {
-        if (MapUtils.isNotEmpty(assetMap)) {
-            List<Map.Entry<String, AssetData>> entries = new ArrayList<>(assetMap.entrySet());
+        if (MapUtils.isNotEmpty(assetIndicators)) {
+            List<Map.Entry<String, AssetData>> entries = new ArrayList<>(assetIndicators.entrySet());
             this.pairIndicators = new HashSet<>();
             for (int i = 0; i < entries.size(); i++) {
                 for (int j = i + 1; j < entries.size(); j++) {
@@ -220,7 +221,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         Instant end = now.minus(slowDuration);
         Instant start = end.minus(slowDuration.multipliedBy(averageDaysCount - 1));
 
-        List<CompletableFuture<Void>> features = assetMap.entrySet().stream()
+        List<CompletableFuture<Void>> features = assetIndicators.entrySet().stream()
                 .map(e -> barService.ta4jConcurrentSeriesAsync(e.getKey(), TimeFrame.TIME_FRAME_D, start, end)
                         .thenAccept(series -> {
                             e.getValue().getSlowMaIndicator().update(series.getBarData());
@@ -229,10 +230,10 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         features.forEach(CompletableFuture::join);
 
         // Instant now2 = now.minus(Duration.ofDays(2));
-        List<CompletableFuture<Void>> fastFeatures = assetMap.entrySet().stream()
+        List<CompletableFuture<Void>> fastFeatures = assetIndicators.entrySet().stream()
                 .map(e -> barService
                         .ta4jConcurrentSeriesAsync(e.getKey(), TimeFrame.TIME_FRAME_M1,
-                                now.minus(Duration.ofMinutes(10)), now)
+                                now.minus(Duration.ofMinutes(30)), now)
                         .thenAccept(series -> series.getBarData().forEach(b -> e.getValue().getBarSeries().addBar(b))))
                 .toList();
         fastFeatures.forEach(CompletableFuture::join);
@@ -254,7 +255,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
         if (quote.getLast() == null || quote.getLastSize() == null)
             return;
         String symbol = quote.getSymbol();
-        AssetData option = assetMap.get(symbol);
+        AssetData option = assetIndicators.get(symbol);
         ConcurrentBarSeries series = option.getBarSeries();
 
         if (series.getEndIndex() == -1 || !quote.getTimestamp().isBefore(series.getLastBar().getBeginTime()))
@@ -262,7 +263,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
     }
 
     private void createRebalanceChain(String buySymbol, String sellSymbol, Position sellPosition) {
-        Bar targetBar = assetMap.get(buySymbol)
+        Bar targetBar = assetIndicators.get(buySymbol)
                 .getBarSeries()
                 .getLastBar();
 
@@ -302,7 +303,7 @@ public class AveragePriceSpreadTrader extends HeartbeatSseEmitterRegistry implem
     @Getter
     @Setter
     @RequiredArgsConstructor
-    private class AssetData {
+    public class AssetData {
         private final ConcurrentBarSeries barSeries;
         private final LastAverageIndicator slowMaIndicator;
         private final NormalizedPriceIndicator normalizedOnSlowMaIndicator;
