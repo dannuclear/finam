@@ -25,14 +25,17 @@ const SERIES_COLORS = [
     "#00695C", // teal
 ];
 
+// Близкие по дюрации и объему
 const defaultAssets: Asset[] = [
     { name: "ОФЗ 26248", symbol: "SU26248RMFS3@MISX" },
-    { name: "ОФЗ 26238", symbol: "SU26238RMFS4@MISX" },
-    { name: "ОФЗ 26230", symbol: "SU26230RMFS1@MISX" },
     { name: "ОФЗ 26254", symbol: "SU26254RMFS1@MISX" },
-    { name: "ОФЗ 26253", symbol: "SU26253RMFS3@MISX" },
     { name: "ОФЗ 26247", symbol: "SU26247RMFS5@MISX" },
-    { name: "ОФЗ 26245", symbol: "SU26245RMFS9@MISX" },
+    { name: "ОФЗ 26250", symbol: "SU26250RMFS9@MISX" },
+    { name: "ОФЗ 26253", symbol: "SU26253RMFS3@MISX" },
+
+    { name: "ОФЗ 26238", symbol: "SU26238RMFS4@MISX" },
+    // { name: "ОФЗ 26230", symbol: "SU26230RMFS1@MISX" },
+    // { name: "ОФЗ 26245", symbol: "SU26245RMFS9@MISX" },
 ]
 
 const generateColor = (index: number): string => {
