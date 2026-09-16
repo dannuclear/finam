@@ -35,7 +35,8 @@ const defaultAssets: Asset[] = [
 
     { name: "ОФЗ 26238", symbol: "SU26238RMFS4@MISX" },
     // { name: "ОФЗ 26230", symbol: "SU26230RMFS1@MISX" },
-    // { name: "ОФЗ 26245", symbol: "SU26245RMFS9@MISX" },
+    //{ name: "ОФЗ 26245", symbol: "SU26245RMFS9@MISX" }, // Одинаковые с 26246
+    //{ name: "ОФЗ 26246", symbol: "SU26246RMFS7@MISX" },
 ]
 
 const generateColor = (index: number): string => {
@@ -57,7 +58,7 @@ const AssetListPage = () => {
 
     const [assets, setAssets] = useState<Asset[]>(defaultAssets)
     const [fastMaCount, setFastMaCount] = useState<string>("5")
-    const [daysCount, setDaysCount] = useState<string>("10")
+    const [daysCount, setDaysCount] = useState<string>("30")
     const [spread, setSpread] = useState<string>("0.25")
     const [showPrice, setShowPrice] = useState<boolean>(false)
 
